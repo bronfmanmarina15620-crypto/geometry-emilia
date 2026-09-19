@@ -1117,7 +1117,8 @@ function pickSessionBank(){
 
 var play = {
   queue: [], idx: 0, correct: 0, best: 0, streak: 0,
-  weak: [], locked: false, sessionRec: null, started: 0
+  weak: [], locked: false, sessionRec: null, started: 0,
+  tries: 0, maxTries: 3
 };
 
 function skillRec(skill){
@@ -1133,6 +1134,7 @@ function startSession(){
   play.streak = 0;
   play.weak = [];
   play.locked = false;
+  play.tries = 0;
   play.started = Date.now();
   play.sessionRec = {
     start: play.started, ms: 0, q: 0, correct: 0, best: 0,
@@ -1146,6 +1148,7 @@ function startSession(){
 
 function renderQuestion(){
   play.locked = false;
+  play.tries = 0;
   var q = play.queue[play.idx];
   document.getElementById("qPrompt").textContent = q.prompt;
   var box = document.getElementById("qSvg");
@@ -1171,59 +1174,99 @@ function renderQuestion(){
   });
 }
 
+var ENCOURAGE = [
+  "נסי שוב 💪",
+  "עוד ניסיון — את יכולה!",
+  "בואי נחשוב שוב יחד ✨",
+  "לאט לאט, עוד פעם 🌟"
+];
+
 function answer(choice, btn){
   if(play.locked) return;
-  play.locked = true;
+  if(btn.disabled) return;
   var q = play.queue[play.idx];
   var ok = choice === q.answer;
   var msg = document.getElementById("msg");
-  var sk = skillRec(q.skill);
-  sk.seen++;
-  play.sessionRec.q++;
-  db.answers++;
-
-  var buttons = document.querySelectorAll("#opts .opt");
-  buttons.forEach(function(b){
-    b.classList.add("dim");
-    if(b.textContent === q.answer) b.classList.add("ok");
-  });
 
   if(ok){
+    play.locked = true;
+    var sk = skillRec(q.skill);
+    sk.seen++;
     sk.correct++;
+    play.sessionRec.q++;
+    db.answers++;
     play.correct++;
     play.sessionRec.correct++;
     play.streak++;
     if(play.streak > play.best) play.best = play.streak;
     if(play.best > play.sessionRec.best) play.sessionRec.best = play.best;
-    btn.classList.remove("dim");
-    btn.classList.add("ok");
+
+    var buttons = document.querySelectorAll("#opts .opt");
+    buttons.forEach(function(b){
+      b.disabled = true;
+      b.classList.add("dim");
+      if(b.textContent === q.answer){ b.classList.remove("dim"); b.classList.add("ok"); }
+    });
     msg.className = "msg ok";
-    msg.textContent = "נכון! 🌟";
-  } else {
-    sk.wrong++;
-    play.streak = 0;
-    btn.classList.remove("dim");
-    btn.classList.add("no");
-    msg.className = "msg no";
-    msg.innerHTML = "לא בדיוק<small>התשובה: " + escapeHtml(q.answer) + "</small>";
-    if(play.weak.indexOf(q.skill) < 0) play.weak.push(q.skill);
-    play.sessionRec.weakSkills = play.weak.slice();
+    msg.textContent = play.tries === 0 ? "נכון! 🌟" : "יופי! מצאת 🌟";
+    play.sessionRec.ms = Date.now() - play.started;
+    save();
+    bumpProgress(true);
+    setTimeout(function(){
+      play.idx++;
+      if(play.idx >= SESSION_SIZE) finishSession();
+      else renderQuestion();
+    }, 700);
+    return;
   }
+
+  /* Wrong pick: encourage + another chance (up to maxTries total attempts) */
+  play.tries++;
+  btn.disabled = true;
+  btn.classList.add("dim");
+  btn.style.opacity = "0.45";
+
+  if(play.tries < play.maxTries){
+    msg.className = "msg";
+    msg.textContent = ENCOURAGE[Math.min(play.tries-1, ENCOURAGE.length-1)];
+    return;
+  }
+
+  /* Out of tries — soft reveal, no "wrong" wording */
+  play.locked = true;
+  var sk2 = skillRec(q.skill);
+  sk2.seen++;
+  sk2.wrong++;
+  play.sessionRec.q++;
+  db.answers++;
+  play.streak = 0;
+  if(play.weak.indexOf(q.skill) < 0) play.weak.push(q.skill);
+  play.sessionRec.weakSkills = play.weak.slice();
+
+  var buttons2 = document.querySelectorAll("#opts .opt");
+  buttons2.forEach(function(b){
+    b.disabled = true;
+    if(b.textContent === q.answer){ b.classList.remove("dim"); b.classList.add("ok"); b.style.opacity = "1"; }
+  });
+  msg.className = "msg ok";
+  msg.innerHTML = "בואי נראה יחד ✨<small>" + escapeHtml(q.answer) + "</small>";
   play.sessionRec.ms = Date.now() - play.started;
   save();
-
-  document.getElementById("sProg").textContent = (play.idx+1) + "/" + SESSION_SIZE;
-  document.getElementById("sStreak").textContent = String(play.streak);
-  document.getElementById("sAcc").textContent =
-    Math.round(100*play.sessionRec.correct/play.sessionRec.q) + "%";
-  document.getElementById("progFill").style.width =
-    Math.round(100*(play.idx+1)/SESSION_SIZE) + "%";
-
+  bumpProgress(false);
   setTimeout(function(){
     play.idx++;
     if(play.idx >= SESSION_SIZE) finishSession();
     else renderQuestion();
-  }, 700);
+  }, 1100);
+}
+
+function bumpProgress(countedCorrect){
+  document.getElementById("sProg").textContent = (play.idx+1) + "/" + SESSION_SIZE;
+  document.getElementById("sStreak").textContent = String(play.streak);
+  document.getElementById("sAcc").textContent = play.sessionRec.q
+    ? Math.round(100*play.sessionRec.correct/play.sessionRec.q) + "%" : "—";
+  document.getElementById("progFill").style.width =
+    Math.round(100*(play.idx+1)/SESSION_SIZE) + "%";
 }
 
 function finishSession(){
