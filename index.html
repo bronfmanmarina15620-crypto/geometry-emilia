@@ -1,0 +1,1479 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>גיאומטריה של אמיליה</title>
+<style>
+  :root{
+    --bg:#fdf7f2; --card:#ffffff; --ink:#33303c; --muted:#8a8496;
+    --pink:#ff7aa8; --pink-d:#e85f8e; --mint:#2fbf9b; --sky:#5aa9f7;
+    --sun:#ffc75a; --bad:#ef5f6b; --line:#efe7e0;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0;height:100%}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Rubik,Arial,sans-serif;
+    display:flex; flex-direction:column; min-height:100%;
+  }
+  .wrap{flex:1; display:flex; flex-direction:column; max-width:520px; margin:0 auto; width:100%; padding:14px 16px 20px}
+  .top{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:6px}
+  .hello{font-size:17px; font-weight:700}
+  .hello span{color:var(--pink-d)}
+  .ghost{
+    background:#fff; border:1px solid var(--line); color:var(--muted);
+    border-radius:999px; padding:7px 13px; font-size:13px; font-weight:600; cursor:pointer;
+  }
+  .stats{display:flex; gap:8px; margin:8px 0 4px}
+  .chip{
+    flex:1; background:var(--card); border:1px solid var(--line); border-radius:16px;
+    padding:9px 6px; text-align:center;
+  }
+  .chip b{display:block; font-size:18px; line-height:1.2}
+  .chip small{color:var(--muted); font-size:11px}
+  .qcard{
+    background:var(--card); border:1px solid var(--line); border-radius:26px;
+    padding:20px 16px; text-align:center; box-shadow:0 6px 18px rgba(80,60,70,.05);
+  }
+  .prompt{font-size:16px; font-weight:700; color:var(--ink); margin-bottom:12px; line-height:1.4}
+  .svgbox{
+    margin:6px 0 8px; padding:8px; border-radius:18px; background:#fffdfa;
+    border:1px dashed var(--line); min-height:60px; display:flex; align-items:center; justify-content:center;
+  }
+  .svgbox:empty{display:none}
+  .msg{min-height:28px; margin-top:10px; font-size:16px; font-weight:700}
+  .msg.ok{color:var(--mint)} .msg.no{color:var(--bad)}
+  .msg small{display:block; color:var(--muted); font-weight:600; font-size:13px; margin-top:2px}
+  .opts{display:flex; flex-direction:column; gap:9px; margin-top:14px}
+  .opt{
+    background:var(--card); border:2px solid var(--line); border-radius:18px;
+    padding:14px 12px; font-size:18px; font-weight:700; cursor:pointer; text-align:center;
+    user-select:none;
+  }
+  .opt:active{transform:translateY(1px); background:#f7f2ee}
+  .opt.ok{border-color:var(--mint); background:#eefaf6; color:var(--mint)}
+  .opt.no{border-color:var(--bad); background:#fdeef0; color:var(--bad)}
+  .opt.dim{opacity:.55}
+  .send{
+    margin-top:14px; width:100%; padding:14px; border-radius:18px; border:none;
+    background:var(--pink); color:#fff; font-size:16px; font-weight:700; cursor:pointer;
+  }
+  .send:active{background:var(--pink-d)}
+  .send.mint{background:var(--mint)}
+  .send.mint:active{background:#259f82}
+  .copy{margin-top:8px; width:100%; padding:11px; border-radius:16px; border:1px solid var(--line); background:#fff; color:var(--muted); font-size:13px; font-weight:600; cursor:pointer}
+  .hidden{display:none !important}
+  h2{font-size:19px; margin:4px 0 12px}
+  h3{font-size:15px; margin:18px 0 8px; color:var(--muted)}
+  .panel{background:var(--card); border:1px solid var(--line); border-radius:20px; padding:14px}
+  table{width:100%; border-collapse:collapse; font-size:13px}
+  th,td{padding:7px 5px; text-align:right; border-bottom:1px solid var(--line)}
+  th{color:var(--muted); font-weight:600; font-size:12px}
+  .hard{display:flex; flex-wrap:wrap; gap:7px; margin-top:4px}
+  .hard span{background:#fdeef0; color:#a3262f; border-radius:10px; padding:6px 10px; font-size:13px; font-weight:700}
+  .empty{color:var(--muted); font-size:14px; line-height:1.6; text-align:center; padding:12px 4px}
+  .danger{margin-top:16px; width:100%; padding:12px; border-radius:16px; border:1px solid #ffd9e3; background:#fff; color:var(--bad); font-weight:700; font-size:14px; cursor:pointer}
+  .pin{width:100%; padding:14px; font-size:22px; text-align:center; letter-spacing:8px; border-radius:16px; border:1px solid var(--line); direction:ltr}
+  .note{color:var(--muted); font-size:12px; margin-top:8px; text-align:center}
+  .badge{
+    display:inline-block; background:#fff0cf; color:#8a6410; border-radius:999px;
+    padding:4px 10px; font-size:12px; font-weight:700; margin-bottom:8px;
+  }
+  .weak-list{text-align:right; margin:8px 0; padding:0 4px}
+  .weak-list li{margin:6px 0; font-size:14px; font-weight:600}
+  .home-card{background:var(--card); border:1px solid var(--line); border-radius:22px; padding:18px 16px; margin-top:8px}
+  .progress-bar{height:8px; background:#efe7e0; border-radius:999px; overflow:hidden; margin:10px 0 4px}
+  .progress-bar > i{display:block; height:100%; background:linear-gradient(90deg,var(--pink),var(--sun)); width:0%; border-radius:999px; transition:width .25s}
+  .hint{margin:0;color:var(--muted);font-size:14px;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div id="home">
+    <div class="top">
+      <div class="hello">היי <span>אמיליה</span>!</div>
+      <button class="ghost" id="btnParentHome" type="button">הורים</button>
+    </div>
+    <div class="stats" id="homeStats">
+      <div class="chip"><b id="hLast">—</b><small>ציון אחרון</small></div>
+      <div class="chip"><b id="hSessions">0</b><small>סשנים</small></div>
+      <div class="chip"><b id="hAcc">—</b><small>הצלחה</small></div>
+    </div>
+    <div class="home-card">
+      <div class="badge">משולשים · זוויות וצלעות</div>
+      <h2 style="margin-top:0">גיאומטריה של אמיליה</h2>
+      <p class="hint">סשן של 15 שאלות — ממיינים משולשים לפי זוויות (חד / ישר / קהה) ולפי צלעות (שווה צלעות / שווה שוקיים / שונה צלעות). בכל סשן תמהיל חדש!</p>
+      <button class="send" id="btnStart" type="button" style="margin-top:16px">התחילי סשן חדש</button>
+    </div>
+  </div>
+
+  <div id="practice" class="hidden">
+    <div class="top">
+      <div class="hello">גיאומטריה</div>
+      <button class="ghost" id="btnQuit" type="button">יציאה</button>
+    </div>
+    <div class="stats">
+      <div class="chip"><b id="sProg">0/15</b><small>התקדמות</small></div>
+      <div class="chip"><b id="sStreak">0</b><small>ברצף</small></div>
+      <div class="chip"><b id="sAcc">—</b><small>הצלחה</small></div>
+    </div>
+    <div class="progress-bar"><i id="progFill"></i></div>
+    <div class="qcard">
+      <div class="prompt" id="qPrompt">—</div>
+      <div class="svgbox" id="qSvg"></div>
+      <div class="msg" id="msg"></div>
+    </div>
+    <div class="opts" id="opts"></div>
+  </div>
+
+  <div id="summary" class="hidden">
+    <div class="top">
+      <div class="hello">סיכום סשן</div>
+      <button class="ghost" id="btnSumHome" type="button">למסך הראשי</button>
+    </div>
+    <div class="panel">
+      <h2 id="sumTitle">כל הכבוד!</h2>
+      <table>
+        <tr><th>נכון</th><td id="sumScore">—</td></tr>
+        <tr><th>אחוז הצלחה</th><td id="sumAcc">—</td></tr>
+        <tr><th>רצף מקסימלי</th><td id="sumBest">—</td></tr>
+      </table>
+      <h3>נושאים לחיזוק</h3>
+      <ul class="weak-list" id="sumWeak"></ul>
+      <button class="send" id="btnReport" type="button">שלחי דוח לאמא</button>
+      <button class="copy" id="btnCopy" type="button">העתיקי את הדוח</button>
+      <button class="send mint" id="btnNewSession" type="button">התחילי סשן חדש</button>
+    </div>
+  </div>
+
+  <div id="pinScreen" class="hidden">
+    <div class="top">
+      <div class="hello">מסך הורים</div>
+      <button class="ghost" id="btnPinBack" type="button">חזרה</button>
+    </div>
+    <div class="panel">
+      <h2>הקלידו קוד</h2>
+      <input class="pin" id="pinInput" type="tel" inputmode="numeric" maxlength="4" placeholder="••••" autocomplete="off">
+      <div class="note" id="pinNote">ארבע ספרות</div>
+    </div>
+  </div>
+
+  <div id="parent" class="hidden">
+    <div class="top">
+      <div class="hello">ההתקדמות של אמיליה</div>
+      <button class="ghost" id="btnBack" type="button">חזרה</button>
+    </div>
+    <div id="parentBody"></div>
+    <button class="send" id="btnParentReport" type="button">שלחי דוח בוואטסאפ</button>
+    <button class="copy" id="btnParentCopy" type="button">העתיקי את הדוח</button>
+    <button class="danger" id="btnReset" type="button">איפוס כל הנתונים</button>
+  </div>
+
+</div>
+<script>
+"use strict";
+var PIN = "2604", KEY = "geometry_emilia_v1", SESSION_SIZE = 15;
+var BANK = [
+  {
+    "id": "g1",
+    "type": "identify",
+    "prompt": "איזה סוג משולש לפי הזוויות?",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 280 220\" width=\"100%\" height=\"220\" style=\"max-width:280px;display:block;margin:0 auto\"><polygon points=\"40,180 240,180 40,50\" fill=\"#fff0cf\" stroke=\"#333\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/><path d=\"M 40 166 L 54 166 L 54 180 \" fill=\"none\" stroke=\"#333\" stroke-width=\"2\"/></svg>",
+    "options": [
+      "חד זווית",
+      "ישר זווית",
+      "קהה זווית"
+    ],
+    "answer": "ישר זווית",
+    "skill": "זוויות: ישר זווית"
+  },
+  {
+    "id": "g2",
+    "type": "identify",
+    "prompt": "איזה סוג משולש לפי הזוויות?",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 280 220\" width=\"100%\" height=\"220\" style=\"max-width:280px;display:block;margin:0 auto\"><polygon points=\"40,180 240,180 240,60\" fill=\"#e8f7ff\" stroke=\"#333\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/><path d=\"M 240 166 L 226 166 L 226 180 \" fill=\"none\" stroke=\"#333\" stroke-width=\"2\"/></svg>",
+    "options": [
+      "חד זווית",
+      "ישר זווית",
+      "קהה זווית"
+    ],
+    "answer": "ישר זווית",
+    "skill": "זוויות: ישר זווית"
+  },
+  {
+    "id": "g3",
+    "type": "identify",
+    "prompt": "איזה סוג משולש לפי הזוויות?",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 280 220\" width=\"100%\" height=\"220\" style=\"max-width:280px;display:block;margin:0 auto\"><polygon points=\"50,40 50,190 230,190\" fill=\"#eefaf6\" stroke=\"#333\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/><path d=\"M 50 176 L 64 176 L 64 190 \" fill=\"none\" stroke=\"#333\" stroke-width=\"2\"/></svg>",
+    "options": [
+      "חד זווית",
+      "ישר זווית",
+      "קהה זווית"
+    ],
+    "answer": "ישר זווית",
+    "skill": "זוויות: ישר זווית"
+  },
+  {
+    "id": "g4",
+    "type": "identify",
+    "prompt": "איזה סוג משולש לפי הזוויות?",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 280 220\" width=\"100%\" height=\"220\" style=\"max-width:280px;display:block;margin:0 auto\"><polygon points=\"50,190 50,50 190,190\" fill=\"#eefaf6\" stroke=\"#333\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/><path d=\"M 50 176 L 64 176 L 64 190 \" fill=\"none\" stroke=\"#333\" stroke-width=\"2\"/><line x1=\"43.0\" y1=\"120.0\" x2=\"57.0\" y2=\"120.0\" stroke=\"#333\" stroke-width=\"2\"/><line x1=\"120.0\" y1=\"183.0\" x2=\"120.0\" y2=\"197.0\" stroke=\"#333\" stroke-width=\"2\"/></svg>",
+    "options": [
+      "חד זווית",
+      "ישר זווית",
+      "קהה זווית"
+    ],
+    "answer": "ישר זווית",
+    "skill": "זוויות: ישר זווית"
+  },
+  {
+    "id": "g5",
+    "type": "identify",
+    "prompt": "איזה סוג משולש לפי הזוויות?",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 280 220\" width=\"100%\" height=\"220\" style=\"max-width:280px;display:block;margin:0 auto\"><polygon points=\"40,180 250,180 40,70\" fill=\"#fff0cf\" stroke=\"#333\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/><path d=\"M 40 166 L 54 166 L 54 180 \" fill=\"none\" stroke=\"#333\" stroke-width=\"2\"/></svg>",
+    "options": [
+      "חד זווית",
+      "ישר זווית",
+      "קהה זווית"
+    ],
+    "answer": "ישר זווית",
+    "skill": "זוויות: ישר זווית"
+  },
+  {
+    "id": "g6",
+    "type": "identify",
+    "prompt": "איזה סוג משולש לפי הזוויות?",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 280 220\" width=\"100%\" height=\"220\" style=\"max-width:280px;display:block;margin:0 auto\"><polygon points=\"60,160 250,190 100,40\" fill=\"#ffe8f0\" stroke=\"#333\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/><path d=\"M 81.7 163.4 A 22 22 0 0 0 67.0 139.1\" fill=\"none\" stroke=\"#ef5f6b\" stroke-width=\"2.5\"/></svg>",
+    "options": [
+      "חד זווית",
+      "ישר זווית",
+      "קהה זווית"
+    ],
+    "answer": "קהה זווית",
+    "skill": "זוויות: קהה זווית"
+  },
+  {
+    "id": "g7",
+    "type": "identify",
+    "prompt": "איזה סוג משולש לפי הזוויות?",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 280 220\" width=\"100%\" height=\"220\" style=\"max-width:280px;display:block;margin:0 auto\"><polygon points=\"30,100 220,180 250,50\" fill=\"#fff0cf\" stroke=\"#333\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/><path d=\"M 201.6 172.2 A 20 20 0 0 1 224.5 160.5\" fill=\"none\" stroke=\"#ef5f6b\" stroke-width=\"2.5\"/></svg>",
+    "options": [
+      "חד זווית",
+      "ישר זווית",
+      "קהה זווית"
+    ],
+    "answer": "קהה זווית",
+    "skill": "זוויות: קהה זווית"
+  },
+  {
+    "id": "g8",
+    "type": "identify",
+    "prompt": "איזה סוג משולש לפי הזוויות?",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 280 220\" width=\"100%\" height=\"220\" style=\"max-width:280px;display:block;margin:0 auto\"><polygon points=\"40,50 80,190 250,140\" fill=\"#fdeef0\" stroke=\"#333\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/><path d=\"M 74.0 168.8 A 22 22 0 0 1 101.1 183.8\" fill=\"none\" stroke=\"#ef5f6b\" stroke-width=\"2.5\"/></svg>",
+    "options": [
+      "חד זווית",
+      "ישר זווית",
+      "קהה זווית"
+    ],
+    "answer": "קהה זווית",
+    "skill": "זוויות: קהה זווית"
+  },
+  {
+    "id": "g9",
+    "type": "identify",
+    "prompt": "איזה סוג משולש לפי הזוויות?",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 280 220\" width=\"100%\" height=\"220\" style=\"max-width:280px;display:block;margin:0 auto\"><polygon points=\"40,120 240,180 240,60\" fill=\"#ffe8f0\" stroke=\"#333\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/><path d=\"M 59.2 125.7 A 20 20 0 0 0 59.2 114.3\" fill=\"none\" stroke=\"#ef5f6b\" stroke-width=\"2.5\"/><line x1=\"142.01143519896442\" y1=\"143.29521600345194\" x2=\"137.98856480103558\" y2=\"156.70478399654806\" stroke=\"#333\" stroke-width=\"2\"/><line x1=\"137.98856480103558\" y1=\"83.29521600345194\" x2=\"142.01143519896442\" y2=\"96.70478399654806\" stroke=\"#333\" stroke-width=\"2\"/></svg>",
+    "options": [
+      "חד זווית",
+      "ישר זווית",
+      "קהה זווית"
+    ],
+    "answer": "קהה זווית",
+    "skill": "זוויות: קהה זווית"
+  },
+  {
+    "id": "g10",
+    "type": "identify",
+    "prompt": "איזה סוג משולש לפי הזוויות?",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 280 220\" width=\"100%\" height=\"220\" style=\"max-width:280px;display:block;margin:0 auto\"><polygon points=\"50,180 230,180 140,40\" fill=\"#eefaf6\" stroke=\"#333\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/></svg>",
+    "options": [
+      "חד זווית",
+      "ישר זווית",
+      "קהה זווית"
+    ],
+    "answer": "חד זווית",
+    "skill": "זוויות: חד זווית"
+  },
+  {
+    "id": "g11",
+    "type": "identify",
+    "prompt": "איזה סוג משולש לפי הזוויות?",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 280 220\" width=\"100%\" height=\"220\" style=\"max-width:280px;display:block;margin:0 auto\"><polygon points=\"40,170 250,160 120,35\" fill=\"#e8f7ff\" stroke=\"#333\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/></svg>",
+    "options": [
+      "חד זווית",
+      "ישר זווית",
+      "קהה זווית"
+    ],
+    "answer": "חד זווית",
+    "skill": "זוויות: חד זווית"
+  },
+  {
+    "id": "g12",
+    "type": "identify",
+    "prompt": "איזה סוג משולש לפי הזוויות?",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 280 220\" width=\"100%\" height=\"220\" style=\"max-width:280px;display:block;margin:0 auto\"><polygon points=\"60,190 240,150 100,40\" fill=\"#ffe8f0\" stroke=\"#333\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/></svg>",
+    "options": [
+      "חד זווית",
+      "ישר זווית",
+      "קהה זווית"
+    ],
+    "answer": "חד זווית",
+    "skill": "זוויות: חד זווית"
+  },
+  {
+    "id": "g13",
+    "type": "identify",
+    "prompt": "איזה סוג משולש לפי הזוויות?",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 280 220\" width=\"100%\" height=\"220\" style=\"max-width:280px;display:block;margin:0 auto\"><polygon points=\"40,185 240,185 140,42\" fill=\"#eefaf6\" stroke=\"#333\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/><line x1=\"140.0\" y1=\"178.0\" x2=\"140.0\" y2=\"192.0\" stroke=\"#333\" stroke-width=\"2\"/><line x1=\"184.2634925705392\" y1=\"117.5115436569656\" x2=\"195.7365074294608\" y2=\"109.4884563430344\" stroke=\"#333\" stroke-width=\"2\"/><line x1=\"95.73650742946081\" y1=\"117.5115436569656\" x2=\"84.26349257053919\" y2=\"109.4884563430344\" stroke=\"#333\" stroke-width=\"2\"/></svg>",
+    "options": [
+      "חד זווית",
+      "ישר זווית",
+      "קהה זווית"
+    ],
+    "answer": "חד זווית",
+    "skill": "זוויות: חד זווית"
+  },
+  {
+    "id": "g14",
+    "type": "identify",
+    "prompt": "איזה סוג משולש לפי הזוויות?",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 280 220\" width=\"100%\" height=\"220\" style=\"max-width:280px;display:block;margin:0 auto\"><polygon points=\"40,185 240,185 140,42\" fill=\"#fff0cf\" stroke=\"#333\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/><line x1=\"140.0\" y1=\"178.0\" x2=\"140.0\" y2=\"192.0\" stroke=\"#333\" stroke-width=\"2\"/><line x1=\"184.2634925705392\" y1=\"117.5115436569656\" x2=\"195.7365074294608\" y2=\"109.4884563430344\" stroke=\"#333\" stroke-width=\"2\"/><line x1=\"95.73650742946081\" y1=\"117.5115436569656\" x2=\"84.26349257053919\" y2=\"109.4884563430344\" stroke=\"#333\" stroke-width=\"2\"/></svg>",
+    "options": [
+      "חד זווית",
+      "ישר זווית",
+      "קהה זווית"
+    ],
+    "answer": "חד זווית",
+    "skill": "זוויות: חד זווית"
+  },
+  {
+    "id": "g15",
+    "type": "identify",
+    "prompt": "איזה סוג משולש לפי הזוויות?",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 280 220\" width=\"100%\" height=\"220\" style=\"max-width:280px;display:block;margin:0 auto\"><polygon points=\"50,185 230,185 140,40\" fill=\"#ffe8f0\" stroke=\"#333\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/><line x1=\"89.05251883661316\" y1=\"108.808459967553\" x2=\"100.94748116338684\" y2=\"116.191540032447\" stroke=\"#333\" stroke-width=\"2\"/><line x1=\"179.05251883661316\" y1=\"116.191540032447\" x2=\"190.94748116338684\" y2=\"108.808459967553\" stroke=\"#333\" stroke-width=\"2\"/></svg>",
+    "options": [
+      "חד זווית",
+      "ישר זווית",
+      "קהה זווית"
+    ],
+    "answer": "חד זווית",
+    "skill": "זוויות: חד זווית"
+  },
+  {
+    "id": "g16",
+    "type": "identify",
+    "prompt": "איזה סוג משולש לפי הצלעות?",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 280 220\" width=\"100%\" height=\"220\" style=\"max-width:280px;display:block;margin:0 auto\"><polygon points=\"40,185 240,185 140,42\" fill=\"#eefaf6\" stroke=\"#333\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/><line x1=\"140.0\" y1=\"178.0\" x2=\"140.0\" y2=\"192.0\" stroke=\"#333\" stroke-width=\"2\"/><line x1=\"184.2634925705392\" y1=\"117.5115436569656\" x2=\"195.7365074294608\" y2=\"109.4884563430344\" stroke=\"#333\" stroke-width=\"2\"/><line x1=\"95.73650742946081\" y1=\"117.5115436569656\" x2=\"84.26349257053919\" y2=\"109.4884563430344\" stroke=\"#333\" stroke-width=\"2\"/></svg>",
+    "options": [
+      "שווה צלעות",
+      "שווה שוקיים",
+      "שונה צלעות"
+    ],
+    "answer": "שווה צלעות",
+    "skill": "צלעות: שווה צלעות"
+  },
+  {
+    "id": "g17",
+    "type": "identify",
+    "prompt": "איזה סוג משולש לפי הצלעות?",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 280 220\" width=\"100%\" height=\"220\" style=\"max-width:280px;display:block;margin:0 auto\"><polygon points=\"40,185 240,185 140,42\" fill=\"#fff0cf\" stroke=\"#333\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/><line x1=\"140.0\" y1=\"178.0\" x2=\"140.0\" y2=\"192.0\" stroke=\"#333\" stroke-width=\"2\"/><line x1=\"184.2634925705392\" y1=\"117.5115436569656\" x2=\"195.7365074294608\" y2=\"109.4884563430344\" stroke=\"#333\" stroke-width=\"2\"/><line x1=\"95.73650742946081\" y1=\"117.5115436569656\" x2=\"84.26349257053919\" y2=\"109.4884563430344\" stroke=\"#333\" stroke-width=\"2\"/></svg>",
+    "options": [
+      "שווה צלעות",
+      "שווה שוקיים",
+      "שונה צלעות"
+    ],
+    "answer": "שווה צלעות",
+    "skill": "צלעות: שווה צלעות"
+  },
+  {
+    "id": "g18",
+    "type": "identify",
+    "prompt": "איזה סוג משולש לפי הצלעות?",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 280 220\" width=\"100%\" height=\"220\" style=\"max-width:280px;display:block;margin:0 auto\"><polygon points=\"40,185 240,185 140,42\" fill=\"#e8f7ff\" stroke=\"#333\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/><line x1=\"140.0\" y1=\"178.0\" x2=\"140.0\" y2=\"192.0\" stroke=\"#333\" stroke-width=\"2\"/><line x1=\"184.2634925705392\" y1=\"117.5115436569656\" x2=\"195.7365074294608\" y2=\"109.4884563430344\" stroke=\"#333\" stroke-width=\"2\"/><line x1=\"95.73650742946081\" y1=\"117.5115436569656\" x2=\"84.26349257053919\" y2=\"109.4884563430344\" stroke=\"#333\" stroke-width=\"2\"/></svg>",
+    "options": [
+      "שווה צלעות",
+      "שווה שוקיים",
+      "שונה צלעות"
+    ],
+    "answer": "שווה צלעות",
+    "skill": "צלעות: שווה צלעות"
+  },
+  {
+    "id": "g19",
+    "type": "identify",
+    "prompt": "איזה סוג משולש לפי הצלעות?",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 280 220\" width=\"100%\" height=\"220\" style=\"max-width:280px;display:block;margin:0 auto\"><polygon points=\"50,185 230,185 140,40\" fill=\"#ffe8f0\" stroke=\"#333\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/><line x1=\"89.05251883661316\" y1=\"108.808459967553\" x2=\"100.94748116338684\" y2=\"116.191540032447\" stroke=\"#333\" stroke-width=\"2\"/><line x1=\"179.05251883661316\" y1=\"116.191540032447\" x2=\"190.94748116338684\" y2=\"108.808459967553\" stroke=\"#333\" stroke-width=\"2\"/></svg>",
+    "options": [
+      "שווה צלעות",
+      "שווה שוקיים",
+      "שונה צלעות"
+    ],
+    "answer": "שווה שוקיים",
+    "skill": "צלעות: שווה שוקיים"
+  },
+  {
+    "id": "g20",
+    "type": "identify",
+    "prompt": "איזה סוג משולש לפי הצלעות?",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 280 220\" width=\"100%\" height=\"220\" style=\"max-width:280px;display:block;margin:0 auto\"><polygon points=\"40,170 240,170 140,50\" fill=\"#eefaf6\" stroke=\"#333\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/><line x1=\"83.02199004365717\" y1=\"107.43926240134209\" x2=\"93.77708795802043\" y2=\"116.4018439966448\" stroke=\"#333\" stroke-width=\"2\"/><line x1=\"86.22291204197957\" y1=\"103.5981560033552\" x2=\"96.97800995634283\" y2=\"112.56073759865791\" stroke=\"#333\" stroke-width=\"2\"/><line x1=\"186.22291204197955\" y1=\"116.4018439966448\" x2=\"196.97800995634282\" y2=\"107.43926240134209\" stroke=\"#333\" stroke-width=\"2\"/><line x1=\"183.02199004365718\" y1=\"112.56073759865791\" x2=\"193.77708795802045\" y2=\"103.5981560033552\" stroke=\"#333\" stroke-width=\"2\"/></svg>",
+    "options": [
+      "שווה צלעות",
+      "שווה שוקיים",
+      "שונה צלעות"
+    ],
+    "answer": "שווה שוקיים",
+    "skill": "צלעות: שווה שוקיים"
+  },
+  {
+    "id": "g21",
+    "type": "identify",
+    "prompt": "איזה סוג משולש לפי הצלעות?",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 280 220\" width=\"100%\" height=\"220\" style=\"max-width:280px;display:block;margin:0 auto\"><polygon points=\"55,190 225,190 140,35\" fill=\"#fff0cf\" stroke=\"#333\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/><line x1=\"91.36231313930077\" y1=\"109.13417172155204\" x2=\"103.63768686069923\" y2=\"115.86582827844796\" stroke=\"#333\" stroke-width=\"2\"/><line x1=\"176.36231313930077\" y1=\"115.86582827844796\" x2=\"188.63768686069923\" y2=\"109.13417172155204\" stroke=\"#333\" stroke-width=\"2\"/></svg>",
+    "options": [
+      "שווה צלעות",
+      "שווה שוקיים",
+      "שונה צלעות"
+    ],
+    "answer": "שווה שוקיים",
+    "skill": "צלעות: שווה שוקיים"
+  },
+  {
+    "id": "g22",
+    "type": "identify",
+    "prompt": "איזה סוג משולש לפי הצלעות?",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 280 220\" width=\"100%\" height=\"220\" style=\"max-width:280px;display:block;margin:0 auto\"><polygon points=\"50,190 50,50 190,190\" fill=\"#eefaf6\" stroke=\"#333\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/><path d=\"M 50 176 L 64 176 L 64 190 \" fill=\"none\" stroke=\"#333\" stroke-width=\"2\"/><line x1=\"43.0\" y1=\"120.0\" x2=\"57.0\" y2=\"120.0\" stroke=\"#333\" stroke-width=\"2\"/><line x1=\"120.0\" y1=\"183.0\" x2=\"120.0\" y2=\"197.0\" stroke=\"#333\" stroke-width=\"2\"/></svg>",
+    "options": [
+      "שווה צלעות",
+      "שווה שוקיים",
+      "שונה צלעות"
+    ],
+    "answer": "שווה שוקיים",
+    "skill": "צלעות: שווה שוקיים"
+  },
+  {
+    "id": "g23",
+    "type": "identify",
+    "prompt": "איזה סוג משולש לפי הצלעות?",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 280 220\" width=\"100%\" height=\"220\" style=\"max-width:280px;display:block;margin:0 auto\"><polygon points=\"40,120 240,180 240,60\" fill=\"#ffe8f0\" stroke=\"#333\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/><path d=\"M 59.2 125.7 A 20 20 0 0 0 59.2 114.3\" fill=\"none\" stroke=\"#ef5f6b\" stroke-width=\"2.5\"/><line x1=\"142.01143519896442\" y1=\"143.29521600345194\" x2=\"137.98856480103558\" y2=\"156.70478399654806\" stroke=\"#333\" stroke-width=\"2\"/><line x1=\"137.98856480103558\" y1=\"83.29521600345194\" x2=\"142.01143519896442\" y2=\"96.70478399654806\" stroke=\"#333\" stroke-width=\"2\"/></svg>",
+    "options": [
+      "שווה צלעות",
+      "שווה שוקיים",
+      "שונה צלעות"
+    ],
+    "answer": "שווה שוקיים",
+    "skill": "צלעות: שווה שוקיים"
+  },
+  {
+    "id": "g24",
+    "type": "identify",
+    "prompt": "איזה סוג משולש לפי הצלעות?",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 280 220\" width=\"100%\" height=\"220\" style=\"max-width:280px;display:block;margin:0 auto\"><polygon points=\"40,180 250,160 90,40\" fill=\"#e8f7ff\" stroke=\"#333\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/></svg>",
+    "options": [
+      "שווה צלעות",
+      "שווה שוקיים",
+      "שונה צלעות"
+    ],
+    "answer": "שונה צלעות",
+    "skill": "צלעות: שונה צלעות"
+  },
+  {
+    "id": "g25",
+    "type": "identify",
+    "prompt": "איזה סוג משולש לפי הצלעות?",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 280 220\" width=\"100%\" height=\"220\" style=\"max-width:280px;display:block;margin:0 auto\"><polygon points=\"50,190 240,120 70,50\" fill=\"#ffe8f0\" stroke=\"#333\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/></svg>",
+    "options": [
+      "שווה צלעות",
+      "שווה שוקיים",
+      "שונה צלעות"
+    ],
+    "answer": "שונה צלעות",
+    "skill": "צלעות: שונה צלעות"
+  },
+  {
+    "id": "g26",
+    "type": "identify",
+    "prompt": "איזה סוג משולש לפי הצלעות?",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 280 220\" width=\"100%\" height=\"220\" style=\"max-width:280px;display:block;margin:0 auto\"><polygon points=\"35,150 260,185 180,40\" fill=\"#fff0cf\" stroke=\"#333\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/></svg>",
+    "options": [
+      "שווה צלעות",
+      "שווה שוקיים",
+      "שונה צלעות"
+    ],
+    "answer": "שונה צלעות",
+    "skill": "צלעות: שונה צלעות"
+  },
+  {
+    "id": "g27",
+    "type": "identify",
+    "prompt": "איזה סוג משולש לפי הצלעות?",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 280 220\" width=\"100%\" height=\"220\" style=\"max-width:280px;display:block;margin:0 auto\"><polygon points=\"40,180 250,180 40,70\" fill=\"#fff0cf\" stroke=\"#333\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/><path d=\"M 40 166 L 54 166 L 54 180 \" fill=\"none\" stroke=\"#333\" stroke-width=\"2\"/></svg>",
+    "options": [
+      "שווה צלעות",
+      "שווה שוקיים",
+      "שונה צלעות"
+    ],
+    "answer": "שונה צלעות",
+    "skill": "צלעות: שונה צלעות"
+  },
+  {
+    "id": "g28",
+    "type": "identify",
+    "prompt": "איזה סוג משולש לפי הצלעות?",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 280 220\" width=\"100%\" height=\"220\" style=\"max-width:280px;display:block;margin:0 auto\"><polygon points=\"40,170 250,160 120,35\" fill=\"#e8f7ff\" stroke=\"#333\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/></svg>",
+    "options": [
+      "שווה צלעות",
+      "שווה שוקיים",
+      "שונה צלעות"
+    ],
+    "answer": "שונה צלעות",
+    "skill": "צלעות: שונה צלעות"
+  },
+  {
+    "id": "g29",
+    "type": "identify",
+    "prompt": "איזה סוג משולש לפי הצלעות?",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 280 220\" width=\"100%\" height=\"220\" style=\"max-width:280px;display:block;margin:0 auto\"><polygon points=\"60,160 250,190 100,40\" fill=\"#ffe8f0\" stroke=\"#333\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/><path d=\"M 81.7 163.4 A 22 22 0 0 0 67.0 139.1\" fill=\"none\" stroke=\"#ef5f6b\" stroke-width=\"2.5\"/></svg>",
+    "options": [
+      "שווה צלעות",
+      "שווה שוקיים",
+      "שונה צלעות"
+    ],
+    "answer": "שונה צלעות",
+    "skill": "צלעות: שונה צלעות"
+  },
+  {
+    "id": "g30",
+    "type": "identify",
+    "prompt": "איזה סוג משולש לפי הצלעות?",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 280 220\" width=\"100%\" height=\"220\" style=\"max-width:280px;display:block;margin:0 auto\"><polygon points=\"30,100 220,180 250,50\" fill=\"#fff0cf\" stroke=\"#333\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/><path d=\"M 201.6 172.2 A 20 20 0 0 1 224.5 160.5\" fill=\"none\" stroke=\"#ef5f6b\" stroke-width=\"2.5\"/></svg>",
+    "options": [
+      "שווה צלעות",
+      "שווה שוקיים",
+      "שונה צלעות"
+    ],
+    "answer": "שונה צלעות",
+    "skill": "צלעות: שונה צלעות"
+  },
+  {
+    "id": "g31",
+    "type": "angles",
+    "prompt": "משולש שיש בו זווית של 90° — איזה סוג הוא לפי הזוויות?",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 280 220\" width=\"100%\" height=\"220\" style=\"max-width:280px;display:block;margin:0 auto\"><polygon points=\"40,180 240,180 40,50\" fill=\"#fff0cf\" stroke=\"#333\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/><path d=\"M 40 166 L 54 166 L 54 180 \" fill=\"none\" stroke=\"#333\" stroke-width=\"2\"/></svg>",
+    "options": [
+      "חד זווית",
+      "ישר זווית",
+      "קהה זווית"
+    ],
+    "answer": "ישר זווית",
+    "skill": "זוויות: ישר זווית"
+  },
+  {
+    "id": "g32",
+    "type": "angles",
+    "prompt": "משולש שכל הזוויות שלו קטנות מ־90° — איזה סוג?",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 280 220\" width=\"100%\" height=\"220\" style=\"max-width:280px;display:block;margin:0 auto\"><polygon points=\"50,180 230,180 140,40\" fill=\"#eefaf6\" stroke=\"#333\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/></svg>",
+    "options": [
+      "חד זווית",
+      "ישר זווית",
+      "קהה זווית"
+    ],
+    "answer": "חד זווית",
+    "skill": "זוויות: חד זווית"
+  },
+  {
+    "id": "g33",
+    "type": "angles",
+    "prompt": "משולש שיש בו זווית גדולה מ־90° — איזה סוג?",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 280 220\" width=\"100%\" height=\"220\" style=\"max-width:280px;display:block;margin:0 auto\"><polygon points=\"60,160 250,190 100,40\" fill=\"#ffe8f0\" stroke=\"#333\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/><path d=\"M 81.7 163.4 A 22 22 0 0 0 67.0 139.1\" fill=\"none\" stroke=\"#ef5f6b\" stroke-width=\"2.5\"/></svg>",
+    "options": [
+      "חד זווית",
+      "ישר זווית",
+      "קהה זווית"
+    ],
+    "answer": "קהה זווית",
+    "skill": "זוויות: קהה זווית"
+  },
+  {
+    "id": "g34",
+    "type": "angles",
+    "prompt": "במשולש ישר זווית יש זווית אחת של…",
+    "svg": null,
+    "options": [
+      "90°",
+      "180°",
+      "45°"
+    ],
+    "answer": "90°",
+    "skill": "זוויות: ישר זווית"
+  },
+  {
+    "id": "g35",
+    "type": "angles",
+    "prompt": "במשולש קהה זווית יש זווית אחת שגדולה מ־…",
+    "svg": null,
+    "options": [
+      "90°",
+      "180°",
+      "45°"
+    ],
+    "answer": "90°",
+    "skill": "זוויות: קהה זווית"
+  },
+  {
+    "id": "g36",
+    "type": "angles",
+    "prompt": "במשולש חד זווית — כל הזוויות…",
+    "svg": null,
+    "options": [
+      "קטנות מ־90°",
+      "גדולות מ־90°",
+      "שוות ל־90°"
+    ],
+    "answer": "קטנות מ־90°",
+    "skill": "זוויות: חד זווית"
+  },
+  {
+    "id": "g37",
+    "type": "angles",
+    "prompt": "אם במשולש יש ריבוע קטן ליד אחת הזוויות — המשולש הוא…",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 280 220\" width=\"100%\" height=\"220\" style=\"max-width:280px;display:block;margin:0 auto\"><polygon points=\"40,180 240,180 240,60\" fill=\"#e8f7ff\" stroke=\"#333\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/><path d=\"M 240 166 L 226 166 L 226 180 \" fill=\"none\" stroke=\"#333\" stroke-width=\"2\"/></svg>",
+    "options": [
+      "חד זווית",
+      "ישר זווית",
+      "קהה זווית"
+    ],
+    "answer": "ישר זווית",
+    "skill": "זוויות: ישר זווית"
+  },
+  {
+    "id": "g38",
+    "type": "angles",
+    "prompt": "הסימון האדום על הזווית הגדולה מרמז שהמשולש הוא…",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 280 220\" width=\"100%\" height=\"220\" style=\"max-width:280px;display:block;margin:0 auto\"><polygon points=\"30,100 220,180 250,50\" fill=\"#fff0cf\" stroke=\"#333\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/><path d=\"M 201.6 172.2 A 20 20 0 0 1 224.5 160.5\" fill=\"none\" stroke=\"#ef5f6b\" stroke-width=\"2.5\"/></svg>",
+    "options": [
+      "חד זווית",
+      "ישר זווית",
+      "קהה זווית"
+    ],
+    "answer": "קהה זווית",
+    "skill": "זוויות: קהה זווית"
+  },
+  {
+    "id": "g39",
+    "type": "angles",
+    "prompt": "משולש שווה צלעות הוא תמיד גם…",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 280 220\" width=\"100%\" height=\"220\" style=\"max-width:280px;display:block;margin:0 auto\"><polygon points=\"40,185 240,185 140,42\" fill=\"#eefaf6\" stroke=\"#333\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/><line x1=\"140.0\" y1=\"178.0\" x2=\"140.0\" y2=\"192.0\" stroke=\"#333\" stroke-width=\"2\"/><line x1=\"184.2634925705392\" y1=\"117.5115436569656\" x2=\"195.7365074294608\" y2=\"109.4884563430344\" stroke=\"#333\" stroke-width=\"2\"/><line x1=\"95.73650742946081\" y1=\"117.5115436569656\" x2=\"84.26349257053919\" y2=\"109.4884563430344\" stroke=\"#333\" stroke-width=\"2\"/></svg>",
+    "options": [
+      "חד זווית",
+      "ישר זווית",
+      "קהה זווית"
+    ],
+    "answer": "חד זווית",
+    "skill": "זוויות: חד זווית"
+  },
+  {
+    "id": "g40",
+    "type": "angles",
+    "prompt": "יכול להיות משולש עם שתי זוויות ישרות?",
+    "svg": null,
+    "options": [
+      "לא",
+      "כן",
+      "רק אם הוא שווה צלעות"
+    ],
+    "answer": "לא",
+    "skill": "זוויות: ישר זווית"
+  },
+  {
+    "id": "g41",
+    "type": "sides",
+    "prompt": "משולש שכל שלוש הצלעות שלו שוות — איזה סוג לפי הצלעות?",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 280 220\" width=\"100%\" height=\"220\" style=\"max-width:280px;display:block;margin:0 auto\"><polygon points=\"40,185 240,185 140,42\" fill=\"#eefaf6\" stroke=\"#333\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/><line x1=\"140.0\" y1=\"178.0\" x2=\"140.0\" y2=\"192.0\" stroke=\"#333\" stroke-width=\"2\"/><line x1=\"184.2634925705392\" y1=\"117.5115436569656\" x2=\"195.7365074294608\" y2=\"109.4884563430344\" stroke=\"#333\" stroke-width=\"2\"/><line x1=\"95.73650742946081\" y1=\"117.5115436569656\" x2=\"84.26349257053919\" y2=\"109.4884563430344\" stroke=\"#333\" stroke-width=\"2\"/></svg>",
+    "options": [
+      "שווה צלעות",
+      "שווה שוקיים",
+      "שונה צלעות"
+    ],
+    "answer": "שווה צלעות",
+    "skill": "צלעות: שווה צלעות"
+  },
+  {
+    "id": "g42",
+    "type": "sides",
+    "prompt": "משולש שיש בו בדיוק שתי צלעות שוות — איזה סוג?",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 280 220\" width=\"100%\" height=\"220\" style=\"max-width:280px;display:block;margin:0 auto\"><polygon points=\"50,185 230,185 140,40\" fill=\"#ffe8f0\" stroke=\"#333\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/><line x1=\"89.05251883661316\" y1=\"108.808459967553\" x2=\"100.94748116338684\" y2=\"116.191540032447\" stroke=\"#333\" stroke-width=\"2\"/><line x1=\"179.05251883661316\" y1=\"116.191540032447\" x2=\"190.94748116338684\" y2=\"108.808459967553\" stroke=\"#333\" stroke-width=\"2\"/></svg>",
+    "options": [
+      "שווה צלעות",
+      "שווה שוקיים",
+      "שונה צלעות"
+    ],
+    "answer": "שווה שוקיים",
+    "skill": "צלעות: שווה שוקיים"
+  },
+  {
+    "id": "g43",
+    "type": "sides",
+    "prompt": "משולש שכל הצלעות באורכים שונים — איזה סוג?",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 280 220\" width=\"100%\" height=\"220\" style=\"max-width:280px;display:block;margin:0 auto\"><polygon points=\"40,180 250,160 90,40\" fill=\"#e8f7ff\" stroke=\"#333\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/></svg>",
+    "options": [
+      "שווה צלעות",
+      "שווה שוקיים",
+      "שונה צלעות"
+    ],
+    "answer": "שונה צלעות",
+    "skill": "צלעות: שונה צלעות"
+  },
+  {
+    "id": "g44",
+    "type": "sides",
+    "prompt": "סימני קו קצרים זהים על שתי צלעות מראים שהמשולש הוא…",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 280 220\" width=\"100%\" height=\"220\" style=\"max-width:280px;display:block;margin:0 auto\"><polygon points=\"40,170 240,170 140,50\" fill=\"#eefaf6\" stroke=\"#333\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/><line x1=\"83.02199004365717\" y1=\"107.43926240134209\" x2=\"93.77708795802043\" y2=\"116.4018439966448\" stroke=\"#333\" stroke-width=\"2\"/><line x1=\"86.22291204197957\" y1=\"103.5981560033552\" x2=\"96.97800995634283\" y2=\"112.56073759865791\" stroke=\"#333\" stroke-width=\"2\"/><line x1=\"186.22291204197955\" y1=\"116.4018439966448\" x2=\"196.97800995634282\" y2=\"107.43926240134209\" stroke=\"#333\" stroke-width=\"2\"/><line x1=\"183.02199004365718\" y1=\"112.56073759865791\" x2=\"193.77708795802045\" y2=\"103.5981560033552\" stroke=\"#333\" stroke-width=\"2\"/></svg>",
+    "options": [
+      "שווה צלעות",
+      "שווה שוקיים",
+      "שונה צלעות"
+    ],
+    "answer": "שווה שוקיים",
+    "skill": "צלעות: שווה שוקיים"
+  },
+  {
+    "id": "g45",
+    "type": "sides",
+    "prompt": "סימני קו זהים על כל שלוש הצלעות מראים שהמשולש הוא…",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 280 220\" width=\"100%\" height=\"220\" style=\"max-width:280px;display:block;margin:0 auto\"><polygon points=\"40,185 240,185 140,42\" fill=\"#fff0cf\" stroke=\"#333\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/><line x1=\"140.0\" y1=\"178.0\" x2=\"140.0\" y2=\"192.0\" stroke=\"#333\" stroke-width=\"2\"/><line x1=\"184.2634925705392\" y1=\"117.5115436569656\" x2=\"195.7365074294608\" y2=\"109.4884563430344\" stroke=\"#333\" stroke-width=\"2\"/><line x1=\"95.73650742946081\" y1=\"117.5115436569656\" x2=\"84.26349257053919\" y2=\"109.4884563430344\" stroke=\"#333\" stroke-width=\"2\"/></svg>",
+    "options": [
+      "שווה צלעות",
+      "שווה שוקיים",
+      "שונה צלעות"
+    ],
+    "answer": "שווה צלעות",
+    "skill": "צלעות: שווה צלעות"
+  },
+  {
+    "id": "g46",
+    "type": "sides",
+    "prompt": "משולש שווה צלעות — כמה צלעות שוות יש בו?",
+    "svg": null,
+    "options": [
+      "3",
+      "2",
+      "1"
+    ],
+    "answer": "3",
+    "skill": "צלעות: שווה צלעות"
+  },
+  {
+    "id": "g47",
+    "type": "sides",
+    "prompt": "משולש שווה שוקיים — כמה צלעות שוות לפחות?",
+    "svg": null,
+    "options": [
+      "2",
+      "3",
+      "0"
+    ],
+    "answer": "2",
+    "skill": "צלעות: שווה שוקיים"
+  },
+  {
+    "id": "g48",
+    "type": "sides",
+    "prompt": "במשולש שונה צלעות — כמה צלעות באורך שונה?",
+    "svg": null,
+    "options": [
+      "כל השלוש",
+      "רק שתיים",
+      "אף אחת"
+    ],
+    "answer": "כל השלוש",
+    "skill": "צלעות: שונה צלעות"
+  },
+  {
+    "id": "g49",
+    "type": "sides",
+    "prompt": "המשולש בתמונה (עם סימונים על שתי צלעות) הוא…",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 280 220\" width=\"100%\" height=\"220\" style=\"max-width:280px;display:block;margin:0 auto\"><polygon points=\"55,190 225,190 140,35\" fill=\"#fff0cf\" stroke=\"#333\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/><line x1=\"91.36231313930077\" y1=\"109.13417172155204\" x2=\"103.63768686069923\" y2=\"115.86582827844796\" stroke=\"#333\" stroke-width=\"2\"/><line x1=\"176.36231313930077\" y1=\"115.86582827844796\" x2=\"188.63768686069923\" y2=\"109.13417172155204\" stroke=\"#333\" stroke-width=\"2\"/></svg>",
+    "options": [
+      "שווה צלעות",
+      "שווה שוקיים",
+      "שונה צלעות"
+    ],
+    "answer": "שווה שוקיים",
+    "skill": "צלעות: שווה שוקיים"
+  },
+  {
+    "id": "g50",
+    "type": "sides",
+    "prompt": "משולש ישר זווית יכול להיות גם שווה שוקיים?",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 280 220\" width=\"100%\" height=\"220\" style=\"max-width:280px;display:block;margin:0 auto\"><polygon points=\"50,190 50,50 190,190\" fill=\"#eefaf6\" stroke=\"#333\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/><path d=\"M 50 176 L 64 176 L 64 190 \" fill=\"none\" stroke=\"#333\" stroke-width=\"2\"/><line x1=\"43.0\" y1=\"120.0\" x2=\"57.0\" y2=\"120.0\" stroke=\"#333\" stroke-width=\"2\"/><line x1=\"120.0\" y1=\"183.0\" x2=\"120.0\" y2=\"197.0\" stroke=\"#333\" stroke-width=\"2\"/></svg>",
+    "options": [
+      "כן",
+      "לא",
+      "רק אם הוא קהה זווית"
+    ],
+    "answer": "כן",
+    "skill": "צלעות: שווה שוקיים"
+  },
+  {
+    "id": "g51",
+    "type": "angles",
+    "prompt": "לפי הזוויות — המשולש הוא…",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 280 220\" width=\"100%\" height=\"220\" style=\"max-width:280px;display:block;margin:0 auto\"><polygon points=\"40,180 240,180 40,50\" fill=\"#fff0cf\" stroke=\"#333\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/><path d=\"M 40 166 L 54 166 L 54 180 \" fill=\"none\" stroke=\"#333\" stroke-width=\"2\"/></svg>",
+    "options": [
+      "חד זווית",
+      "ישר זווית",
+      "קהה זווית"
+    ],
+    "answer": "ישר זווית",
+    "skill": "זוויות: ישר זווית"
+  },
+  {
+    "id": "g52",
+    "type": "angles",
+    "prompt": "לפי הזוויות — המשולש הוא…",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 280 220\" width=\"100%\" height=\"220\" style=\"max-width:280px;display:block;margin:0 auto\"><polygon points=\"40,50 80,190 250,140\" fill=\"#fdeef0\" stroke=\"#333\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/><path d=\"M 74.0 168.8 A 22 22 0 0 1 101.1 183.8\" fill=\"none\" stroke=\"#ef5f6b\" stroke-width=\"2.5\"/></svg>",
+    "options": [
+      "חד זווית",
+      "ישר זווית",
+      "קהה זווית"
+    ],
+    "answer": "קהה זווית",
+    "skill": "זוויות: קהה זווית"
+  },
+  {
+    "id": "g53",
+    "type": "angles",
+    "prompt": "לפי הזוויות — המשולש הוא…",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 280 220\" width=\"100%\" height=\"220\" style=\"max-width:280px;display:block;margin:0 auto\"><polygon points=\"40,185 240,185 140,42\" fill=\"#e8f7ff\" stroke=\"#333\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/><line x1=\"140.0\" y1=\"178.0\" x2=\"140.0\" y2=\"192.0\" stroke=\"#333\" stroke-width=\"2\"/><line x1=\"184.2634925705392\" y1=\"117.5115436569656\" x2=\"195.7365074294608\" y2=\"109.4884563430344\" stroke=\"#333\" stroke-width=\"2\"/><line x1=\"95.73650742946081\" y1=\"117.5115436569656\" x2=\"84.26349257053919\" y2=\"109.4884563430344\" stroke=\"#333\" stroke-width=\"2\"/></svg>",
+    "options": [
+      "חד זווית",
+      "ישר זווית",
+      "קהה זווית"
+    ],
+    "answer": "חד זווית",
+    "skill": "זוויות: חד זווית"
+  },
+  {
+    "id": "g54",
+    "type": "sides",
+    "prompt": "לפי הצלעות — המשולש הוא…",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 280 220\" width=\"100%\" height=\"220\" style=\"max-width:280px;display:block;margin:0 auto\"><polygon points=\"40,170 240,170 140,50\" fill=\"#eefaf6\" stroke=\"#333\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/><line x1=\"83.02199004365717\" y1=\"107.43926240134209\" x2=\"93.77708795802043\" y2=\"116.4018439966448\" stroke=\"#333\" stroke-width=\"2\"/><line x1=\"86.22291204197957\" y1=\"103.5981560033552\" x2=\"96.97800995634283\" y2=\"112.56073759865791\" stroke=\"#333\" stroke-width=\"2\"/><line x1=\"186.22291204197955\" y1=\"116.4018439966448\" x2=\"196.97800995634282\" y2=\"107.43926240134209\" stroke=\"#333\" stroke-width=\"2\"/><line x1=\"183.02199004365718\" y1=\"112.56073759865791\" x2=\"193.77708795802045\" y2=\"103.5981560033552\" stroke=\"#333\" stroke-width=\"2\"/></svg>",
+    "options": [
+      "שווה צלעות",
+      "שווה שוקיים",
+      "שונה צלעות"
+    ],
+    "answer": "שווה שוקיים",
+    "skill": "צלעות: שווה שוקיים"
+  },
+  {
+    "id": "g55",
+    "type": "sides",
+    "prompt": "לפי הצלעות — המשולש הוא…",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 280 220\" width=\"100%\" height=\"220\" style=\"max-width:280px;display:block;margin:0 auto\"><polygon points=\"35,150 260,185 180,40\" fill=\"#fff0cf\" stroke=\"#333\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/></svg>",
+    "options": [
+      "שווה צלעות",
+      "שווה שוקיים",
+      "שונה צלעות"
+    ],
+    "answer": "שונה צלעות",
+    "skill": "צלעות: שונה צלעות"
+  },
+  {
+    "id": "g56",
+    "type": "sides",
+    "prompt": "לפי הצלעות — המשולש הוא…",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 280 220\" width=\"100%\" height=\"220\" style=\"max-width:280px;display:block;margin:0 auto\"><polygon points=\"40,185 240,185 140,42\" fill=\"#eefaf6\" stroke=\"#333\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/><line x1=\"140.0\" y1=\"178.0\" x2=\"140.0\" y2=\"192.0\" stroke=\"#333\" stroke-width=\"2\"/><line x1=\"184.2634925705392\" y1=\"117.5115436569656\" x2=\"195.7365074294608\" y2=\"109.4884563430344\" stroke=\"#333\" stroke-width=\"2\"/><line x1=\"95.73650742946081\" y1=\"117.5115436569656\" x2=\"84.26349257053919\" y2=\"109.4884563430344\" stroke=\"#333\" stroke-width=\"2\"/></svg>",
+    "options": [
+      "שווה צלעות",
+      "שווה שוקיים",
+      "שונה צלעות"
+    ],
+    "answer": "שווה צלעות",
+    "skill": "צלעות: שווה צלעות"
+  },
+  {
+    "id": "g57",
+    "type": "angles",
+    "prompt": "יש ריבוע קטן בזווית — המשולש הוא…",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 280 220\" width=\"100%\" height=\"220\" style=\"max-width:280px;display:block;margin:0 auto\"><polygon points=\"40,180 250,180 40,70\" fill=\"#fff0cf\" stroke=\"#333\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/><path d=\"M 40 166 L 54 166 L 54 180 \" fill=\"none\" stroke=\"#333\" stroke-width=\"2\"/></svg>",
+    "options": [
+      "חד זווית",
+      "ישר זווית",
+      "קהה זווית"
+    ],
+    "answer": "ישר זווית",
+    "skill": "זוויות: ישר זווית"
+  },
+  {
+    "id": "g58",
+    "type": "angles",
+    "prompt": "יש זווית קהה — המשולש הוא…",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 280 220\" width=\"100%\" height=\"220\" style=\"max-width:280px;display:block;margin:0 auto\"><polygon points=\"40,120 240,180 240,60\" fill=\"#ffe8f0\" stroke=\"#333\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/><path d=\"M 59.2 125.7 A 20 20 0 0 0 59.2 114.3\" fill=\"none\" stroke=\"#ef5f6b\" stroke-width=\"2.5\"/><line x1=\"142.01143519896442\" y1=\"143.29521600345194\" x2=\"137.98856480103558\" y2=\"156.70478399654806\" stroke=\"#333\" stroke-width=\"2\"/><line x1=\"137.98856480103558\" y1=\"83.29521600345194\" x2=\"142.01143519896442\" y2=\"96.70478399654806\" stroke=\"#333\" stroke-width=\"2\"/></svg>",
+    "options": [
+      "חד זווית",
+      "ישר זווית",
+      "קהה זווית"
+    ],
+    "answer": "קהה זווית",
+    "skill": "זוויות: קהה זווית"
+  },
+  {
+    "id": "g59",
+    "type": "identify",
+    "prompt": "הסתכלי על המשולש. לפי הזוויות הוא…",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 280 220\" width=\"100%\" height=\"220\" style=\"max-width:280px;display:block;margin:0 auto\"><polygon points=\"50,180 230,180 140,40\" fill=\"#eefaf6\" stroke=\"#333\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/></svg>",
+    "options": [
+      "חד זווית",
+      "ישר זווית",
+      "קהה זווית"
+    ],
+    "answer": "חד זווית",
+    "skill": "זוויות: חד זווית"
+  },
+  {
+    "id": "g60",
+    "type": "identify",
+    "prompt": "הסתכלי על הסימונים. לפי הצלעות הוא…",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 280 220\" width=\"100%\" height=\"220\" style=\"max-width:280px;display:block;margin:0 auto\"><polygon points=\"50,185 230,185 140,40\" fill=\"#ffe8f0\" stroke=\"#333\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/><line x1=\"89.05251883661316\" y1=\"108.808459967553\" x2=\"100.94748116338684\" y2=\"116.191540032447\" stroke=\"#333\" stroke-width=\"2\"/><line x1=\"179.05251883661316\" y1=\"116.191540032447\" x2=\"190.94748116338684\" y2=\"108.808459967553\" stroke=\"#333\" stroke-width=\"2\"/></svg>",
+    "options": [
+      "שווה צלעות",
+      "שווה שוקיים",
+      "שונה צלעות"
+    ],
+    "answer": "שווה שוקיים",
+    "skill": "צלעות: שווה שוקיים"
+  },
+  {
+    "id": "g61",
+    "type": "identify",
+    "prompt": "איזה משולש מופיע בציור? (לפי זוויות)",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 280 220\" width=\"100%\" height=\"220\" style=\"max-width:280px;display:block;margin:0 auto\"><polygon points=\"40,180 240,180 240,60\" fill=\"#e8f7ff\" stroke=\"#333\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/><path d=\"M 240 166 L 226 166 L 226 180 \" fill=\"none\" stroke=\"#333\" stroke-width=\"2\"/></svg>",
+    "options": [
+      "חד זווית",
+      "ישר זווית",
+      "קהה זווית"
+    ],
+    "answer": "ישר זווית",
+    "skill": "זוויות: ישר זווית"
+  },
+  {
+    "id": "g62",
+    "type": "identify",
+    "prompt": "איזה משולש מופיע בציור? (לפי זוויות)",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 280 220\" width=\"100%\" height=\"220\" style=\"max-width:280px;display:block;margin:0 auto\"><polygon points=\"60,160 250,190 100,40\" fill=\"#ffe8f0\" stroke=\"#333\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/><path d=\"M 81.7 163.4 A 22 22 0 0 0 67.0 139.1\" fill=\"none\" stroke=\"#ef5f6b\" stroke-width=\"2.5\"/></svg>",
+    "options": [
+      "חד זווית",
+      "ישר זווית",
+      "קהה זווית"
+    ],
+    "answer": "קהה זווית",
+    "skill": "זוויות: קהה זווית"
+  },
+  {
+    "id": "g63",
+    "type": "identify",
+    "prompt": "איזה משולש מופיע בציור? (לפי צלעות)",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 280 220\" width=\"100%\" height=\"220\" style=\"max-width:280px;display:block;margin:0 auto\"><polygon points=\"40,185 240,185 140,42\" fill=\"#fff0cf\" stroke=\"#333\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/><line x1=\"140.0\" y1=\"178.0\" x2=\"140.0\" y2=\"192.0\" stroke=\"#333\" stroke-width=\"2\"/><line x1=\"184.2634925705392\" y1=\"117.5115436569656\" x2=\"195.7365074294608\" y2=\"109.4884563430344\" stroke=\"#333\" stroke-width=\"2\"/><line x1=\"95.73650742946081\" y1=\"117.5115436569656\" x2=\"84.26349257053919\" y2=\"109.4884563430344\" stroke=\"#333\" stroke-width=\"2\"/></svg>",
+    "options": [
+      "שווה צלעות",
+      "שווה שוקיים",
+      "שונה צלעות"
+    ],
+    "answer": "שווה צלעות",
+    "skill": "צלעות: שווה צלעות"
+  },
+  {
+    "id": "g64",
+    "type": "identify",
+    "prompt": "איזה משולש מופיע בציור? (לפי צלעות)",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 280 220\" width=\"100%\" height=\"220\" style=\"max-width:280px;display:block;margin:0 auto\"><polygon points=\"40,180 250,160 90,40\" fill=\"#e8f7ff\" stroke=\"#333\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/></svg>",
+    "options": [
+      "שווה צלעות",
+      "שווה שוקיים",
+      "שונה צלעות"
+    ],
+    "answer": "שונה צלעות",
+    "skill": "צלעות: שונה צלעות"
+  },
+  {
+    "id": "g65",
+    "type": "identify",
+    "prompt": "איזה משולש מופיע בציור? (לפי צלעות)",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 280 220\" width=\"100%\" height=\"220\" style=\"max-width:280px;display:block;margin:0 auto\"><polygon points=\"55,190 225,190 140,35\" fill=\"#fff0cf\" stroke=\"#333\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/><line x1=\"91.36231313930077\" y1=\"109.13417172155204\" x2=\"103.63768686069923\" y2=\"115.86582827844796\" stroke=\"#333\" stroke-width=\"2\"/><line x1=\"176.36231313930077\" y1=\"115.86582827844796\" x2=\"188.63768686069923\" y2=\"109.13417172155204\" stroke=\"#333\" stroke-width=\"2\"/></svg>",
+    "options": [
+      "שווה צלעות",
+      "שווה שוקיים",
+      "שונה צלעות"
+    ],
+    "answer": "שווה שוקיים",
+    "skill": "צלעות: שווה שוקיים"
+  },
+  {
+    "id": "g66",
+    "type": "identify",
+    "prompt": "איזה משולש מופיע בציור? (לפי זוויות)",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 280 220\" width=\"100%\" height=\"220\" style=\"max-width:280px;display:block;margin:0 auto\"><polygon points=\"60,190 240,150 100,40\" fill=\"#ffe8f0\" stroke=\"#333\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/></svg>",
+    "options": [
+      "חד זווית",
+      "ישר זווית",
+      "קהה זווית"
+    ],
+    "answer": "חד זווית",
+    "skill": "זוויות: חד זווית"
+  },
+  {
+    "id": "g67",
+    "type": "identify",
+    "prompt": "מצאי את סוג המשולש לפי הזוויות",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 280 220\" width=\"100%\" height=\"220\" style=\"max-width:280px;display:block;margin:0 auto\"><polygon points=\"50,40 50,190 230,190\" fill=\"#eefaf6\" stroke=\"#333\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/><path d=\"M 50 176 L 64 176 L 64 190 \" fill=\"none\" stroke=\"#333\" stroke-width=\"2\"/></svg>",
+    "options": [
+      "חד זווית",
+      "ישר זווית",
+      "קהה זווית"
+    ],
+    "answer": "ישר זווית",
+    "skill": "זוויות: ישר זווית"
+  },
+  {
+    "id": "g68",
+    "type": "identify",
+    "prompt": "מצאי את סוג המשולש לפי הזוויות",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 280 220\" width=\"100%\" height=\"220\" style=\"max-width:280px;display:block;margin:0 auto\"><polygon points=\"30,100 220,180 250,50\" fill=\"#fff0cf\" stroke=\"#333\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/><path d=\"M 201.6 172.2 A 20 20 0 0 1 224.5 160.5\" fill=\"none\" stroke=\"#ef5f6b\" stroke-width=\"2.5\"/></svg>",
+    "options": [
+      "חד זווית",
+      "ישר זווית",
+      "קהה זווית"
+    ],
+    "answer": "קהה זווית",
+    "skill": "זוויות: קהה זווית"
+  },
+  {
+    "id": "g69",
+    "type": "identify",
+    "prompt": "מצאי את סוג המשולש לפי הצלעות",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 280 220\" width=\"100%\" height=\"220\" style=\"max-width:280px;display:block;margin:0 auto\"><polygon points=\"40,185 240,185 140,42\" fill=\"#e8f7ff\" stroke=\"#333\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/><line x1=\"140.0\" y1=\"178.0\" x2=\"140.0\" y2=\"192.0\" stroke=\"#333\" stroke-width=\"2\"/><line x1=\"184.2634925705392\" y1=\"117.5115436569656\" x2=\"195.7365074294608\" y2=\"109.4884563430344\" stroke=\"#333\" stroke-width=\"2\"/><line x1=\"95.73650742946081\" y1=\"117.5115436569656\" x2=\"84.26349257053919\" y2=\"109.4884563430344\" stroke=\"#333\" stroke-width=\"2\"/></svg>",
+    "options": [
+      "שווה צלעות",
+      "שווה שוקיים",
+      "שונה צלעות"
+    ],
+    "answer": "שווה צלעות",
+    "skill": "צלעות: שווה צלעות"
+  },
+  {
+    "id": "g70",
+    "type": "identify",
+    "prompt": "מצאי את סוג המשולש לפי הצלעות",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 280 220\" width=\"100%\" height=\"220\" style=\"max-width:280px;display:block;margin:0 auto\"><polygon points=\"50,190 50,50 190,190\" fill=\"#eefaf6\" stroke=\"#333\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/><path d=\"M 50 176 L 64 176 L 64 190 \" fill=\"none\" stroke=\"#333\" stroke-width=\"2\"/><line x1=\"43.0\" y1=\"120.0\" x2=\"57.0\" y2=\"120.0\" stroke=\"#333\" stroke-width=\"2\"/><line x1=\"120.0\" y1=\"183.0\" x2=\"120.0\" y2=\"197.0\" stroke=\"#333\" stroke-width=\"2\"/></svg>",
+    "options": [
+      "שווה צלעות",
+      "שווה שוקיים",
+      "שונה צלעות"
+    ],
+    "answer": "שווה שוקיים",
+    "skill": "צלעות: שווה שוקיים"
+  }
+];
+
+var mem = null;
+function blank(){ return { skills:{}, sessions:[], answers:0, lastScore:null }; }
+function load(){
+  try{
+    var raw = localStorage.getItem(KEY);
+    return raw ? JSON.parse(raw) : blank();
+  }catch(e){ return mem || (mem = blank()); }
+}
+function save(){
+  try{ localStorage.setItem(KEY, JSON.stringify(db)); }catch(e){ mem = db; }
+}
+var db = load();
+if(!db.skills) db.skills = {};
+if(!db.sessions) db.sessions = [];
+
+function shuffle(arr){
+  var a = arr.slice();
+  for(var i=a.length-1;i>0;i--){
+    var j = Math.floor(Math.random()*(i+1));
+    var t = a[i]; a[i]=a[j]; a[j]=t;
+  }
+  return a;
+}
+function pickSessionBank(){
+  return shuffle(BANK).slice(0, SESSION_SIZE);
+}
+
+var play = {
+  queue: [], idx: 0, correct: 0, best: 0, streak: 0,
+  weak: [], locked: false, sessionRec: null, started: 0
+};
+
+function skillRec(skill){
+  if(!db.skills[skill]) db.skills[skill] = { seen:0, correct:0, wrong:0, label: skill };
+  return db.skills[skill];
+}
+
+function startSession(){
+  play.queue = pickSessionBank();
+  play.idx = 0;
+  play.correct = 0;
+  play.best = 0;
+  play.streak = 0;
+  play.weak = [];
+  play.locked = false;
+  play.started = Date.now();
+  play.sessionRec = {
+    start: play.started, ms: 0, q: 0, correct: 0, best: 0,
+    weakSkills: [], ids: play.queue.map(function(q){ return q.id; })
+  };
+  db.sessions.push(play.sessionRec);
+  save();
+  show("practice");
+  renderQuestion();
+}
+
+function renderQuestion(){
+  play.locked = false;
+  var q = play.queue[play.idx];
+  document.getElementById("qPrompt").textContent = q.prompt;
+  var box = document.getElementById("qSvg");
+  box.innerHTML = q.svg || "";
+  document.getElementById("msg").textContent = "";
+  document.getElementById("msg").className = "msg";
+  document.getElementById("sProg").textContent = play.idx + "/" + SESSION_SIZE;
+  document.getElementById("sStreak").textContent = String(play.streak);
+  document.getElementById("sAcc").textContent = play.sessionRec.q
+    ? Math.round(100*play.sessionRec.correct/play.sessionRec.q)+"%" : "—";
+  document.getElementById("progFill").style.width =
+    Math.round(100*play.idx/SESSION_SIZE) + "%";
+
+  var opts = document.getElementById("opts");
+  opts.innerHTML = "";
+  shuffle(q.options).forEach(function(opt){
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "opt";
+    b.textContent = opt;
+    b.addEventListener("click", function(){ answer(opt, b); });
+    opts.appendChild(b);
+  });
+}
+
+function answer(choice, btn){
+  if(play.locked) return;
+  play.locked = true;
+  var q = play.queue[play.idx];
+  var ok = choice === q.answer;
+  var msg = document.getElementById("msg");
+  var sk = skillRec(q.skill);
+  sk.seen++;
+  play.sessionRec.q++;
+  db.answers++;
+
+  var buttons = document.querySelectorAll("#opts .opt");
+  buttons.forEach(function(b){
+    b.classList.add("dim");
+    if(b.textContent === q.answer) b.classList.add("ok");
+  });
+
+  if(ok){
+    sk.correct++;
+    play.correct++;
+    play.sessionRec.correct++;
+    play.streak++;
+    if(play.streak > play.best) play.best = play.streak;
+    if(play.best > play.sessionRec.best) play.sessionRec.best = play.best;
+    btn.classList.remove("dim");
+    btn.classList.add("ok");
+    msg.className = "msg ok";
+    msg.textContent = "נכון! 🌟";
+  } else {
+    sk.wrong++;
+    play.streak = 0;
+    btn.classList.remove("dim");
+    btn.classList.add("no");
+    msg.className = "msg no";
+    msg.innerHTML = "לא בדיוק<small>התשובה: " + escapeHtml(q.answer) + "</small>";
+    if(play.weak.indexOf(q.skill) < 0) play.weak.push(q.skill);
+    play.sessionRec.weakSkills = play.weak.slice();
+  }
+  play.sessionRec.ms = Date.now() - play.started;
+  save();
+
+  document.getElementById("sProg").textContent = (play.idx+1) + "/" + SESSION_SIZE;
+  document.getElementById("sStreak").textContent = String(play.streak);
+  document.getElementById("sAcc").textContent =
+    Math.round(100*play.sessionRec.correct/play.sessionRec.q) + "%";
+  document.getElementById("progFill").style.width =
+    Math.round(100*(play.idx+1)/SESSION_SIZE) + "%";
+
+  setTimeout(function(){
+    play.idx++;
+    if(play.idx >= SESSION_SIZE) finishSession();
+    else renderQuestion();
+  }, 700);
+}
+
+function finishSession(){
+  play.sessionRec.ms = Date.now() - play.started;
+  var acc = play.sessionRec.q ? play.sessionRec.correct / play.sessionRec.q : 0;
+  db.lastScore = { correct: play.sessionRec.correct, total: play.sessionRec.q, acc: acc, at: Date.now() };
+  save();
+
+  document.getElementById("sumTitle").textContent =
+    acc >= 0.8 ? "אלופה! 🌟" : (acc >= 0.6 ? "כל הכבוד!" : "יפה שהתאמנת — נחזק ביחד");
+  document.getElementById("sumScore").textContent = play.sessionRec.correct + " מתוך " + play.sessionRec.q;
+  document.getElementById("sumAcc").textContent = Math.round(100*acc) + "%";
+  document.getElementById("sumBest").textContent = String(play.sessionRec.best);
+
+  var ul = document.getElementById("sumWeak");
+  ul.innerHTML = "";
+  if(!play.weak.length){
+    ul.innerHTML = "<li style=\"color:var(--mint)\">בלי טעויות בסשן הזה 🎉</li>";
+  } else {
+    play.weak.forEach(function(w){
+      var li = document.createElement("li");
+      li.textContent = w;
+      ul.appendChild(li);
+    });
+  }
+  show("summary");
+}
+
+function escapeHtml(s){
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+function pad2(n){ return (n<10?"0":"") + n; }
+function fmtDate(ts){ var d = new Date(ts); return pad2(d.getDate())+"/"+pad2(d.getMonth()+1)+"/"+d.getFullYear(); }
+function fmtTime(ts){
+  var d = new Date(ts);
+  try{
+    return new Intl.DateTimeFormat("he-IL", { timeZone:"Asia/Jerusalem", hour:"2-digit", minute:"2-digit", hour12:false }).format(d);
+  }catch(e){
+    return pad2(d.getHours())+":"+pad2(d.getMinutes());
+  }
+}
+function fmtDur(ms){
+  var m = Math.round(ms/60000);
+  if(m < 1) return "פחות מדקה";
+  if(m < 60) return m + " דק׳";
+  return Math.floor(m/60) + " שע׳ " + (m%60) + " דק׳";
+}
+function hardestSkills(n){
+  var arr = [];
+  for(var k in db.skills){
+    var f = db.skills[k];
+    if(f.wrong > 0) arr.push({k:k, wrong:f.wrong, seen:f.seen, correct:f.correct, label:f.label||k});
+  }
+  arr.sort(function(x,y){
+    if(y.wrong !== x.wrong) return y.wrong - x.wrong;
+    return (x.correct/(x.seen||1)) - (y.correct/(y.seen||1));
+  });
+  return arr.slice(0,n);
+}
+
+function reportText(fromParent){
+  var s = play.sessionRec;
+  if(fromParent || !s || !s.q){
+    var real = db.sessions.filter(function(x){ return x.q > 0; });
+    if(!real.length) return null;
+    s = real[real.length-1];
+  }
+  if(!s || !s.q) return null;
+  var lines = [];
+  lines.push("דוח גיאומטריה — אמיליה");
+  lines.push(fmtDate(s.start) + " בשעה " + fmtTime(s.start));
+  lines.push("זמן תרגול: " + fmtDur(s.ms || 0));
+  lines.push("שאלות: " + s.q);
+  lines.push("נכון: " + s.correct + " (" + Math.round(100*s.correct/s.q) + "%)");
+  lines.push("רצף מקסימלי: " + (s.best || 0));
+  var weak = s.weakSkills && s.weakSkills.length ? s.weakSkills : [];
+  if(!weak.length){
+    var hard = hardestSkills(5);
+    weak = hard.map(function(h){ return h.label; });
+  }
+  if(weak.length){
+    lines.push("");
+    lines.push("נושאים לחיזוק:");
+    weak.forEach(function(w){ lines.push("• " + w); });
+  } else {
+    lines.push("");
+    lines.push("בלי טעויות בכלל 🎉");
+  }
+  return lines.join("\n");
+}
+
+function openWhatsApp(t){
+  window.open("https://wa.me/?text=" + encodeURIComponent(t), "_blank");
+}
+function copyText(t, feedbackEl){
+  var done = function(){
+    if(feedbackEl){ feedbackEl.className = "msg ok"; feedbackEl.textContent = "הדוח הועתק — אפשר להדביק בוואטסאפ"; }
+    else alert("הדוח הועתק");
+  };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(done, function(){ window.prompt("העתיקי את הדוח:", t); });
+  } else { window.prompt("העתיקי את הדוח:", t); }
+}
+
+var scr = {
+  home: document.getElementById("home"),
+  practice: document.getElementById("practice"),
+  summary: document.getElementById("summary"),
+  pin: document.getElementById("pinScreen"),
+  parent: document.getElementById("parent")
+};
+function show(name){
+  for(var k in scr) scr[k].classList.add("hidden");
+  scr[name].classList.remove("hidden");
+  if(name === "home") refreshHome();
+}
+
+function refreshHome(){
+  var real = db.sessions.filter(function(s){ return s.q > 0; });
+  document.getElementById("hSessions").textContent = String(real.length);
+  if(db.lastScore){
+    document.getElementById("hLast").textContent = db.lastScore.correct + "/" + db.lastScore.total;
+  } else {
+    document.getElementById("hLast").textContent = "—";
+  }
+  var tq=0, tc=0;
+  real.forEach(function(s){ tq += s.q; tc += s.correct; });
+  document.getElementById("hAcc").textContent = tq ? Math.round(100*tc/tq)+"%" : "—";
+}
+
+document.getElementById("btnStart").addEventListener("click", startSession);
+document.getElementById("btnNewSession").addEventListener("click", startSession);
+document.getElementById("btnSumHome").addEventListener("click", function(){ show("home"); });
+document.getElementById("btnQuit").addEventListener("click", function(){
+  if(play.sessionRec && play.sessionRec.q > 0){
+    if(!window.confirm("לצאת באמצע הסשן? ההתקדמות עד כה תישמר.")) return;
+    play.sessionRec.ms = Date.now() - play.started;
+    save();
+  } else if(play.sessionRec && play.sessionRec.q === 0){
+    var ix = db.sessions.indexOf(play.sessionRec);
+    if(ix>=0) db.sessions.splice(ix,1);
+    save();
+  }
+  show("home");
+});
+
+document.getElementById("btnReport").addEventListener("click", function(){
+  var t = reportText(false);
+  if(!t){ alert("אין דוח עדיין"); return; }
+  openWhatsApp(t);
+});
+document.getElementById("btnCopy").addEventListener("click", function(){
+  var t = reportText(false);
+  if(!t){ alert("אין דוח עדיין"); return; }
+  copyText(t, document.getElementById("msg"));
+  var note = document.createElement("div");
+  note.className = "note";
+  note.textContent = "הדוח הועתק — אפשר להדביק בוואטסאפ";
+  note.style.color = "var(--mint)";
+  note.style.fontWeight = "700";
+  var panel = document.querySelector("#summary .panel");
+  var old = panel.querySelector(".copy-note");
+  if(old) old.remove();
+  note.classList.add("copy-note");
+  panel.insertBefore(note, document.getElementById("btnReport"));
+});
+
+function goPin(){
+  document.getElementById("pinInput").value = "";
+  document.getElementById("pinNote").textContent = "ארבע ספרות";
+  show("pin");
+  setTimeout(function(){ document.getElementById("pinInput").focus(); }, 60);
+}
+document.getElementById("btnParentHome").addEventListener("click", goPin);
+document.getElementById("btnPinBack").addEventListener("click", function(){ show("home"); });
+document.getElementById("pinInput").addEventListener("input", function(e){
+  var v = e.target.value.replace(/\D/g,"").slice(0,4);
+  e.target.value = v;
+  if(v.length === 4){
+    if(v === PIN){
+      buildParent();
+      show("parent");
+    } else {
+      document.getElementById("pinNote").textContent = "קוד לא נכון";
+      e.target.value = "";
+    }
+  }
+});
+document.getElementById("btnBack").addEventListener("click", function(){ show("home"); });
+document.getElementById("btnReset").addEventListener("click", function(){
+  if(window.confirm("לאפס את כל נתוני הגיאומטריה של אמיליה? אין דרך לשחזר.")){
+    db = blank();
+    save();
+    buildParent();
+    refreshHome();
+  }
+});
+document.getElementById("btnParentReport").addEventListener("click", function(){
+  var t = reportText(true);
+  if(!t){ alert("עדיין אין סשנים לשליחה"); return; }
+  openWhatsApp(t);
+});
+document.getElementById("btnParentCopy").addEventListener("click", function(){
+  var t = reportText(true);
+  if(!t){ alert("עדיין אין סשנים להעתקה"); return; }
+  copyText(t, null);
+});
+
+function buildParent(){
+  var host = document.getElementById("parentBody");
+  var real = db.sessions.filter(function(s){ return s.q > 0; });
+  if(!real.length){
+    host.innerHTML = '<div class="panel"><div class="empty">עדיין אין נתונים.<br>אחרי שאמיליה תתרגל, יופיעו כאן הסשנים והנושאים לחיזוק.</div></div>';
+    return;
+  }
+  var tq=0, tc=0, tms=0;
+  real.forEach(function(s){ tq += s.q; tc += s.correct; tms += (s.ms||0); });
+  var h = '<div class="panel">';
+  h += '<h2>סך הכול</h2><table>';
+  h += '<tr><th>סשנים</th><td>' + real.length + '</td></tr>';
+  h += '<tr><th>שאלות</th><td>' + tq + '</td></tr>';
+  h += '<tr><th>אחוז הצלחה</th><td>' + Math.round(100*tc/tq) + '%</td></tr>';
+  h += '<tr><th>זמן תרגול מצטבר</th><td>' + fmtDur(tms) + '</td></tr>';
+  h += '</table></div>';
+
+  h += '<h3>היסטוריית סשנים</h3><div class="panel"><table>';
+  h += '<tr><th>תאריך</th><th>שעה</th><th>זמן</th><th>ציון</th><th>הצלחה</th></tr>';
+  real.slice().reverse().slice(0,25).forEach(function(s){
+    h += '<tr><td>' + fmtDate(s.start) + '</td><td>' + fmtTime(s.start) + '</td><td>' + fmtDur(s.ms||0) +
+         '</td><td>' + s.correct + '/' + s.q + '</td><td>' + Math.round(100*s.correct/s.q) + '%</td></tr>';
+  });
+  h += '</table></div>';
+
+  var hard = hardestSkills(8);
+  h += '<h3>נושאים לחיזוק</h3><div class="panel">';
+  if(hard.length){
+    h += '<div class="hard">';
+    hard.forEach(function(x){
+      h += '<span>' + escapeHtml(x.label) + ' · ' + x.wrong + ' טעויות</span>';
+    });
+    h += '</div>';
+  } else {
+    h += '<div class="empty">אין נושאים עם טעויות — הכול נכון עד כה.</div>';
+  }
+  h += '</div>';
+  host.innerHTML = h;
+}
+
+refreshHome();
+show("home");
+</script>
+</body>
+</html>
