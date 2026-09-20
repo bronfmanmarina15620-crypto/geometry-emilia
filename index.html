@@ -1271,6 +1271,7 @@ function bumpProgress(countedCorrect){
 
 function finishSession(){
   play.sessionRec.ms = Date.now() - play.started;
+  play.sessionRec.weakSkills = play.weak.slice();
   var acc = play.sessionRec.q ? play.sessionRec.correct / play.sessionRec.q : 0;
   db.lastScore = { correct: play.sessionRec.correct, total: play.sessionRec.q, acc: acc, at: Date.now() };
   save();
@@ -1342,18 +1343,15 @@ function reportText(fromParent){
   lines.push("שאלות: " + s.q);
   lines.push("נכון: " + s.correct + " (" + Math.round(100*s.correct/s.q) + "%)");
   lines.push("רצף מקסימלי: " + (s.best || 0));
-  var weak = s.weakSkills && s.weakSkills.length ? s.weakSkills : [];
-  if(!weak.length){
-    var hard = hardestSkills(5);
-    weak = hard.map(function(h){ return h.label; });
-  }
+  /* Only THIS session's misses — never fall back to historical hardestSkills */
+  var weak = (s.weakSkills && s.weakSkills.length) ? s.weakSkills : [];
   if(weak.length){
     lines.push("");
-    lines.push("נושאים לחיזוק:");
+    lines.push("נושאים לחיזוק בסשן הזה:");
     weak.forEach(function(w){ lines.push("• " + w); });
   } else {
     lines.push("");
-    lines.push("בלי טעויות בכלל 🎉");
+    lines.push("בלי טעויות בסשן הזה 🎉");
   }
   return lines.join("\n");
 }
@@ -1501,7 +1499,7 @@ function buildParent(){
   h += '</table></div>';
 
   var hard = hardestSkills(8);
-  h += '<h3>נושאים לחיזוק</h3><div class="panel">';
+  h += '<h3>נושאים עם טעויות (מצטבר בכל הסשנים)</h3><div class="panel">';
   if(hard.length){
     h += '<div class="hard">';
     hard.forEach(function(x){
