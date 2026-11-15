@@ -1,0 +1,20 @@
+--- a/app.js
++++ b/app.js
+@@ -59,7 +59,7 @@
+     { id:"hiluk", key:"hiluk_amelia_v1", row:"emilia-hiluk", label:"חילוק ארוך", url:"https://bronfmanmarina15620-crypto.github.io/hiluk-emilia/", parse:parseHiluk, catalog:[1,2,3,4,5].map(function(n){return {id:"hiluk:"+n, label:"חילוק · רמה "+n, app:"hiluk"};}) },
+     { id:"hisur", key:"hisur_amelia_v1", row:"emilia-hisur", label:"חיסור במאונך", url:"https://bronfmanmarina15620-crypto.github.io/hisur-emilia/", parse:parseHisur, catalog:Object.keys(HISUR_PAT).map(function(k){return {id:"hisur:"+k, label:HISUR_PAT[k], app:"hisur"};}) },
+     { id:"seder", key:"seder_emilia_v1", row:"emilia-seder", label:"סדר פעולות", url:"https://bronfmanmarina15620-crypto.github.io/hisur-emilia/seder/", parse:parseSeder, catalog:Object.keys(SEDER_LABELS).map(function(k){return {id:"seder:"+k, label:SEDER_LABELS[k], app:"seder"};}) },
+-    { id:"geometry", key:"geometry_emilia_v1", row:null, deviceOnly:true, label:"גיאומטריה", url:"https://bronfmanmarina15620-crypto.github.io/geometry-emilia/", parse:parseGeometry, catalog:GEO_SKILLS.map(function(s){return {id:"geometry:"+s, label:s, app:"geometry"};}) },
++    { id:"geometry", key:"geometry_emilia_v1", row:"emilia-geometry", label:"גיאומטריה", url:"https://bronfmanmarina15620-crypto.github.io/geometry-emilia/", parse:parseGeometry, catalog:GEO_SKILLS.map(function(s){return {id:"geometry:"+s, label:s, app:"geometry"};}) },
+     { id:"arabic", key:"arabic_amelia_v1", row:"emilia-arabic", label:"ערבית", url:"https://bronfmanmarina15620-crypto.github.io/arabic-emilia/", parse:parseArabic, catalog:Object.keys(ARABIC_TYPES).map(function(k){return {id:"arabic:"+k, label:ARABIC_TYPES[k], app:"arabic"};}) }
+   ];
+ 
+@@ -337,7 +337,7 @@
+         events.push(ev({
+           app:"geometry", at:x.at||s.start, topic:"geometry:"+(x.skill||x.topic||"tri"),
+           topicLabel:x.skill||x.topic||"גיאומטריה",
+-          question:x.skill ? ("תרגיל ב«"+x.skill+"»") : "",
++          question:x.q || (x.skill ? ("תרגיל ב«"+x.skill+"»") : ""),
+           answers:x.picks||[], attempts:x.attempts||1, ms:(x.sec||0)*1000, outcome:x.outcome
+         }));
+       });

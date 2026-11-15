@@ -1108,12 +1108,140 @@ function load(){
     return raw ? JSON.parse(raw) : blank();
   }catch(e){ return mem || (mem = blank()); }
 }
-function save(){
+function saveLocal(){
   try{ localStorage.setItem(KEY, JSON.stringify(db)); }catch(e){ mem = db; }
 }
+function save(opts){
+  saveLocal();
+  try{ cloudSchedule(opts && opts.immediate); }catch(e){}
+}
 var db = load();
+if(!db || typeof db !== "object") db = blank();
 if(!db.skills) db.skills = {};
 if(!db.sessions) db.sessions = [];
+
+/* ---------------------------------------------------------------
+   Cloud backup — same Supabase table/anon key as the sibling apps
+   (kefel_state, row "emilia-geometry"). The local key stays the
+   source of truth; the cloud is an additive copy. Every sync is
+   pull → merge (union, nothing dropped) → push, so neither side
+   can lose history. Offline / any error: silent, app keeps working.
+----------------------------------------------------------------*/
+var CLOUD = {
+  url: "https://nrxhjzmmmzqjytmdgzjg.supabase.co",
+  anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5yeGhqem1tbXpxanl0bWRnempnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg1NDg3MTAsImV4cCI6MjEwNDEyNDcxMH0.5KYX69e1AyXqtHHRejFarK-r1yoXdmlpav2Oazb2WIs",
+  rowId: "emilia-geometry"
+};
+var cloudState = { timer:null, busy:false, again:false, lastOk:0, lastErr:0 };
+
+function cloudConfigured(){
+  return !!(CLOUD.url && CLOUD.anonKey && CLOUD.url.indexOf("https://") === 0 &&
+            CLOUD.anonKey.length > 20 && typeof fetch === "function");
+}
+function cloudHeaders(){
+  return { "apikey": CLOUD.anonKey, "Authorization": "Bearer " + CLOUD.anonKey, "Content-Type": "application/json" };
+}
+function cloudFetch(url, init){
+  var ctl = null, t = null;
+  try{ if(typeof AbortController === "function"){ ctl = new AbortController(); init.signal = ctl.signal; t = setTimeout(function(){ ctl.abort(); }, 10000); } }catch(e){}
+  return fetch(url, init).then(function(r){ if(t) clearTimeout(t); return r; }, function(e){ if(t) clearTimeout(t); throw e; });
+}
+function itemKey(it){ return (it && (it.at || "")) + "|" + (it && (it.id || "")); }
+
+/* Additive merge of `src` into the live `db` (in place, so the running
+   session object keeps its identity). Local values are never removed. */
+function mergeInto(src){
+  if(!src || typeof src !== "object") return false;
+  var changed = false;
+  var byStart = {};
+  db.sessions.forEach(function(s){ if(s && s.start != null) byStart[s.start] = s; });
+  (Array.isArray(src.sessions) ? src.sessions : []).forEach(function(cs){
+    if(!cs || typeof cs !== "object" || cs.start == null) return;
+    var ls = byStart[cs.start];
+    if(!ls){
+      /* skip empty sessions that were abandoned before the first answer */
+      if(!(cs.q > 0) && !(cs.items && cs.items.length)) return;
+      var copy = JSON.parse(JSON.stringify(cs));
+      db.sessions.push(copy); byStart[cs.start] = copy; changed = true;
+      return;
+    }
+    var cItems = Array.isArray(cs.items) ? cs.items : [];
+    if(!cItems.length) return;
+    if(!Array.isArray(ls.items)) ls.items = [];
+    var have = {};
+    ls.items.forEach(function(it){ have[itemKey(it)] = 1; });
+    var added = 0;
+    cItems.forEach(function(it){ if(it && !have[itemKey(it)]){ ls.items.push(JSON.parse(JSON.stringify(it))); have[itemKey(it)] = 1; added++; } });
+    if(added){
+      ls.items.sort(function(a,b){ return (a.at||0) - (b.at||0); });
+      ["q","correct","best","firstTry","adult","ms"].forEach(function(f){
+        if(typeof cs[f] === "number" && !(ls[f] >= cs[f])) ls[f] = cs[f];
+      });
+      changed = true;
+    }
+  });
+  db.sessions.sort(function(a,b){ return (a.start||0) - (b.start||0); });
+  /* skill counters: keep the larger of each counter (no double counting) */
+  var cs2 = src.skills && typeof src.skills === "object" ? src.skills : {};
+  for(var k in cs2){
+    var c = cs2[k]; if(!c || typeof c !== "object") continue;
+    if(!db.skills[k]){ db.skills[k] = JSON.parse(JSON.stringify(c)); changed = true; continue; }
+    var l = db.skills[k];
+    for(var f in c){
+      if(typeof c[f] === "number" && (typeof l[f] !== "number" || c[f] > l[f])){ l[f] = c[f]; changed = true; }
+      else if(l[f] == null && c[f] != null){ l[f] = c[f]; changed = true; }
+    }
+  }
+  if(typeof src.answers === "number" && !(db.answers >= src.answers)){ db.answers = src.answers; changed = true; }
+  if(src.lastScore && src.lastScore.at && (!db.lastScore || (db.lastScore.at||0) < src.lastScore.at)){
+    db.lastScore = JSON.parse(JSON.stringify(src.lastScore)); changed = true;
+  }
+  return changed;
+}
+
+function cloudSync(){
+  if(!cloudConfigured()) return Promise.resolve(false);
+  if(cloudState.busy){ cloudState.again = true; return Promise.resolve(false); }
+  cloudState.busy = true;
+  var getUrl = CLOUD.url + "/rest/v1/kefel_state?id=eq." + encodeURIComponent(CLOUD.rowId) + "&select=data,updated_at";
+  return cloudFetch(getUrl, { method:"GET", headers: cloudHeaders() }).then(function(res){
+    if(!res.ok) throw new Error("pull " + res.status);
+    return res.json();
+  }).then(function(rows){
+    var data = rows && rows[0] ? rows[0].data : null;
+    if(typeof data === "string"){ try{ data = JSON.parse(data); }catch(e){ data = null; } }
+    if(data && mergeInto(data)){
+      saveLocal();
+      try{ if(scr && scr.home && !scr.home.classList.contains("hidden")) refreshHome(); }catch(e){}
+    }
+    var headers = cloudHeaders();
+    headers["Prefer"] = "resolution=merge-duplicates,return=minimal";
+    return cloudFetch(CLOUD.url + "/rest/v1/kefel_state?on_conflict=id", {
+      method:"POST", headers: headers,
+      body: JSON.stringify({ id: CLOUD.rowId, data: db, updated_at: new Date().toISOString() })
+    });
+  }).then(function(res){
+    if(!res.ok) throw new Error("push " + res.status);
+    cloudState.lastOk = Date.now();
+    return true;
+  }).catch(function(){
+    cloudState.lastErr = Date.now();
+    return false;
+  }).then(function(ok){
+    cloudState.busy = false;
+    if(cloudState.again){ cloudState.again = false; cloudSchedule(false); }
+    return ok;
+  });
+}
+function cloudSchedule(immediate){
+  if(!cloudConfigured()) return;
+  if(cloudState.timer){ clearTimeout(cloudState.timer); cloudState.timer = null; }
+  if(immediate){ cloudSync(); return; }
+  cloudState.timer = setTimeout(function(){ cloudState.timer = null; cloudSync(); }, 1200);
+}
+try{
+  window.addEventListener("online", function(){ cloudSchedule(true); });
+}catch(e){}
 
 function shuffle(arr){
   var a = arr.slice();
@@ -2267,7 +2395,7 @@ var ASK_MSG = "את התרגיל הזה כדאי לשאול את אמא או א�
 
 function recordItem(q, outcome){
   var sec = Math.round((Date.now() - play.cur.t0)/100)/10;
-  var item = { id:q.id, topic:q.topic||"tri", skill:q.skill, picks:play.cur.picks.slice(),
+  var item = { id:q.id, q:q.prompt, topic:q.topic||"tri", skill:q.skill, picks:play.cur.picks.slice(),
                attempts:play.cur.picks.length, sec:sec, outcome:outcome, at:Date.now() };
   play.sessionRec.items.push(item);
   var sk = skillRec(q.skill);
@@ -2371,7 +2499,7 @@ function finishSession(){
   play.sessionRec.askIds = play.ask.slice();
   var acc = play.sessionRec.q ? play.sessionRec.correct / play.sessionRec.q : 0;
   db.lastScore = { correct: play.sessionRec.correct, total: play.sessionRec.q, acc: acc, at: Date.now() };
-  save();
+  save({ immediate: true });
 
   document.getElementById("sumTitle").textContent =
     acc >= 0.8 ? "אלופה! 🌟" : (acc >= 0.6 ? "כל הכבוד!" : "יפה שהתאמנת — נחזק ביחד");
@@ -2557,6 +2685,7 @@ document.getElementById("pinInput").addEventListener("input", function(e){
     if(v === PIN){
       buildParent();
       show("parent");
+      cloudSync().then(function(){ try{ if(!scr.parent.classList.contains("hidden")) buildParent(); }catch(e){} });
     } else {
       document.getElementById("pinNote").textContent = "הקוד שגוי, נסו שוב";
       e.target.value = "";
@@ -2687,11 +2816,13 @@ function buildParent(){
          '</td><td>' + s.correct + '/' + s.q + '</td><td>' + (s.askIds ? s.askIds.length : '—') + '</td></tr>';
   });
   h += '</table></div>';
+  h += '<div class="note" style="margin-top:8px">גיבוי בענן: ' + (cloudState.lastOk ? ('פעיל · עודכן ' + fmtTime(cloudState.lastOk)) : (cloudState.lastErr ? 'אין רשת כרגע — הכול נשמר במכשיר' : 'פעיל')) + '</div>';
   host.innerHTML = h;
 }
 
 refreshHome();
 show("home");
+cloudSchedule(true);
 </script>
 </body>
 </html>
